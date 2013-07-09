@@ -34,8 +34,8 @@ public class QREncoder
 
   private static final BarcodeFormat DEFAULT_BARCODE_FORMAT = BarcodeFormat.QR_CODE;
   private static final String DEFAULT_IMAGE_FORMAT = "PNG";
-  private static final int DEFAULT_WIDTH = 150;
-  private static final int DEFAULT_HEIGHT = 150;
+  private static final int DEFAULT_WIDTH = 200;
+  private static final int DEFAULT_HEIGHT = 200;
 
   public static void encode(String contents, OutputStream stream) throws IOException, WriterException
   {

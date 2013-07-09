@@ -72,7 +72,7 @@ public class OtaBuildHtmlGenerator extends VelocityBase<Parameters>
           throws MalformedURLException
     {
       super();
-      URL htmlUrl = OtaHtmlGenerator.generateHtmlServiceUrl(htmlServiceUrl, title, bundleIdentifier, bundleVersion,
+      URL htmlUrl = OtaHtmlGenerator.generateHtmlServiceUrl(htmlServiceUrl, null, title, bundleIdentifier, bundleVersion,
             ipaClassifier, otaClassifier);
       mappings.put(HTML_URL, htmlUrl.toExternalForm());
       mappings.put(HTML_SERVICE_URL, htmlServiceUrl);

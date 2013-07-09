@@ -81,12 +81,21 @@ public class OtaHtmlService extends HttpServlet
 
         URL htmlServiceUrl = OtaHtmlGenerator.generateHtmlServiceUrl(
               getHtmlServiceUrl(request),
+              originalReferer,
               request.getParameter(TITLE),
               request.getParameter(BUNDLE_IDENTIFIER),
               request.getParameter(BUNDLE_VERSION),
               request.getParameter(IPA_CLASSIFIER),
               request.getParameter(OTA_CLASSIFIER)
           );
+
+        LOG.info(String.format(
+              "GET request from '%s' with referer '%s', action:qrcode and parameters '%s', '%s', '%s', '%s', '%s'",
+              request.getRemoteAddr(), originalReferer, request.getParameter(TITLE),
+              request.getParameter(BUNDLE_IDENTIFIER), request.getParameter(BUNDLE_VERSION),
+              request.getParameter(IPA_CLASSIFIER), request.getParameter(OTA_CLASSIFIER)));
+
+        LOG.info("Sending QRCode for " + htmlServiceUrl.toString());
         sendQRCode(request, response, htmlServiceUrl.toString(), getMatrixToImageConfig(request));
 
       }
@@ -104,16 +113,17 @@ public class OtaHtmlService extends HttpServlet
 
         URL htmlServiceQrcodeUrl = OtaHtmlGenerator.generateHtmlServiceUrl(
               getHtmlServiceUrl(request),
+              originalReferer,
               request.getParameter(TITLE),
               request.getParameter(BUNDLE_IDENTIFIER),
               request.getParameter(BUNDLE_VERSION),
               request.getParameter(IPA_CLASSIFIER),
               request.getParameter(OTA_CLASSIFIER)
           );
-        htmlServiceQrcodeUrl = new URL(htmlServiceQrcodeUrl.toExternalForm() + "&"+
-          ACTION+"=qrcode&"+
-          QR_ON_COLOR+"="+QR_ON_COLOR_DEFAULT+"&"+
-          QR_OFF_COLOR+"="+QR_OFF_COLOR_DEFAULT);
+        htmlServiceQrcodeUrl = new URL(htmlServiceQrcodeUrl.toExternalForm() + "&" +
+              ACTION + "=qrcode&" +
+              QR_ON_COLOR + "=" + QR_ON_COLOR_DEFAULT + "&" +
+              QR_OFF_COLOR + "=" + QR_OFF_COLOR_DEFAULT);
 
         LOG.info(String.format("GET request from '%s' with referer '%s' and parameters '%s', '%s', '%s', '%s', '%s'",
               request.getRemoteAddr(), originalReferer, request.getParameter(TITLE), request
@@ -123,6 +133,7 @@ public class OtaHtmlService extends HttpServlet
         HashMap<String, String> initParameters = getInitParameters();
         String htmlTemplatePath = initParameters.get(HTML_TEMPLATE_PATH_KEY);
 
+        response.setContentType("text/html");
         PrintWriter writer = response.getWriter();
         try {
           OtaHtmlGenerator.getInstance(htmlTemplatePath).generate(
@@ -160,17 +171,17 @@ public class OtaHtmlService extends HttpServlet
     return map;
   }
 
-  String getPlistServiceUrl(HttpServletRequest request)
+  static String getPlistServiceUrl(HttpServletRequest request)
   {
     return getServiceUrl(request, OtaPlistService.SERVICE_NAME);
   }
 
-  URL getHtmlServiceUrl(HttpServletRequest request) throws MalformedURLException
+  static URL getHtmlServiceUrl(HttpServletRequest request) throws MalformedURLException
   {
     return new URL(getServiceUrl(request, OtaHtmlService.SERVICE_NAME));
   }
 
-  private String getServiceUrl(HttpServletRequest request, String serviceName)
+  private static String getServiceUrl(HttpServletRequest request, String serviceName)
   {
     if (request.getRequestURL() == null) {
       return null;

@@ -42,6 +42,7 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
   public static final String BUNDLE_VERSION = "bundleVersion";
   public static final String IPA_CLASSIFIER = "ipaClassifier";
   public static final String OTA_CLASSIFIER = "otaClassifier";
+  public static final String REFERER = "Referer";
 
   /**
    * Parameters required for the <code>OtaHtmlGenerator</code>.
@@ -132,19 +133,35 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
    * @return the URL
    * @throws MalformedURLException
    */
-  public static URL generateHtmlServiceUrl(URL htmlServiceUrl, String title, String bundleIdentifier,
+  public static URL generateHtmlServiceUrl(URL htmlServiceUrl, String referer, String title, String bundleIdentifier,
         String bundleVersion, String ipaClassifier, String otaClassifier) throws MalformedURLException
   {
-    return new URL(String.format("%s?%s=%s&%s=%s&%s=%s%s%s",
-          htmlServiceUrl.toExternalForm(),
-          TITLE, LibUtils.urlEncode(title),
-          BUNDLE_IDENTIFIER, LibUtils.urlEncode(bundleIdentifier),
-          BUNDLE_VERSION, LibUtils.urlEncode(bundleVersion),
-          (StringUtils.isEmpty(ipaClassifier) ? "" :
-                String.format("&%s=%s", IPA_CLASSIFIER, LibUtils.urlEncode(ipaClassifier))),
-          (StringUtils.isEmpty(otaClassifier) ? "" :
-                String.format("&%s=%s", OTA_CLASSIFIER, LibUtils.urlEncode(otaClassifier)))
-      ));
+    if (referer == null) {
+      return new URL(String.format("%s?%s=%s&%s=%s&%s=%s%s%s",
+            htmlServiceUrl.toExternalForm(),
+            TITLE, LibUtils.urlEncode(title),
+            BUNDLE_IDENTIFIER, LibUtils.urlEncode(bundleIdentifier),
+            BUNDLE_VERSION, LibUtils.urlEncode(bundleVersion),
+            (StringUtils.isEmpty(ipaClassifier) ? "" :
+                  String.format("&%s=%s", IPA_CLASSIFIER, LibUtils.urlEncode(ipaClassifier))),
+            (StringUtils.isEmpty(otaClassifier) ? "" :
+                  String.format("&%s=%s", OTA_CLASSIFIER, LibUtils.urlEncode(otaClassifier)))
+        ));
+
+    }
+    else {
+      return new URL(String.format("%s?%s=%s&%s=%s&%s=%s&%s=%s%s%s",
+            htmlServiceUrl.toExternalForm(),
+            REFERER, LibUtils.encode(REFERER + "=" + referer),
+            TITLE, LibUtils.urlEncode(title),
+            BUNDLE_IDENTIFIER, LibUtils.urlEncode(bundleIdentifier),
+            BUNDLE_VERSION, LibUtils.urlEncode(bundleVersion),
+            (StringUtils.isEmpty(ipaClassifier) ? "" :
+                  String.format("&%s=%s", IPA_CLASSIFIER, LibUtils.urlEncode(ipaClassifier))),
+            (StringUtils.isEmpty(otaClassifier) ? "" :
+                  String.format("&%s=%s", OTA_CLASSIFIER, LibUtils.urlEncode(otaClassifier)))
+        ));
+    }
   }
 
 }

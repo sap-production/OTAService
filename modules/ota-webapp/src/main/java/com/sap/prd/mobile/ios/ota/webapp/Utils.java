@@ -19,6 +19,7 @@
  */
 package com.sap.prd.mobile.ios.ota.webapp;
 
+import static com.sap.prd.mobile.ios.ota.lib.LibUtils.decode;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 import java.io.IOException;
@@ -76,6 +77,15 @@ public class Utils
     String referer = request.getParameter("Referer");
     if (referer == null) {
       referer = request.getHeader("Referer");
+    }
+    else {
+      if (!referer.contains("://")) {
+        referer = decode(referer);
+        int idx = referer.indexOf("://");
+        if(idx < 0) throw new IOException(":// still not contained after decoding Referer");
+        idx = referer.lastIndexOf("=", idx);
+        if(idx >= 0) referer = referer.substring(idx+1);
+      }
     }
     return referer;
   }
@@ -194,7 +204,11 @@ public class Utils
     if (request.getRequestURI() == null) {
       return null;
     }
-    String[] requestURI = request.getRequestURI().split("/");
+    String uri = request.getRequestURI();
+    int paramsIdx = uri.lastIndexOf("?");
+    if (paramsIdx >= 0) uri = uri.substring(paramsIdx);
+
+    String[] requestURI = uri.split("/");
     String[][] result = null;
     boolean startFound = false;
     int readIdx = 0, writeIdx = 0;

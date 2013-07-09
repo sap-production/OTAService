@@ -107,24 +107,24 @@ public class OtaHtmlGeneratorTest
           "http://apple-ota.wdf.sap.corp:1080/ota-service/HTML?" +
                 "title=MyApp&bundleIdentifier=com.sap.myApp.XYZ&bundleVersion=3.4.5.6&" +
                 "ipaClassifier=ipaClassifier&otaClassifier=otaClassifier",
-          OtaHtmlGenerator.generateHtmlServiceUrl(url, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
+          OtaHtmlGenerator.generateHtmlServiceUrl(url, null, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
                 ipaClassifier, otaClassifier).toExternalForm());
     assertEquals(
           "http://apple-ota.wdf.sap.corp:1080/ota-service/HTML?" +
                 "title=MyApp+With+Special%24_Char%26&bundleIdentifier=com.sap.myApp.XYZ&bundleVersion=3.4.5.6&" +
                 "ipaClassifier=ipaClassifier&otaClassifier=otaClassifier",
-          OtaHtmlGenerator.generateHtmlServiceUrl(url, "MyApp With Special$_Char&", "com.sap.myApp.XYZ", "3.4.5.6",
+          OtaHtmlGenerator.generateHtmlServiceUrl(url, null, "MyApp With Special$_Char&", "com.sap.myApp.XYZ", "3.4.5.6",
                 ipaClassifier, otaClassifier)
             .toExternalForm());
     assertEquals(
           "http://apple-ota.wdf.sap.corp:1080/ota-service/HTML?" +
                 "title=MyApp&bundleIdentifier=com.sap.myApp.XYZ&bundleVersion=3.4.5.6",
-          OtaHtmlGenerator.generateHtmlServiceUrl(url, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
+          OtaHtmlGenerator.generateHtmlServiceUrl(url, null, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
                 null, null).toExternalForm());
     assertEquals(
           "http://apple-ota.wdf.sap.corp:1080/ota-service/HTML?" +
                 "title=MyApp&bundleIdentifier=com.sap.myApp.XYZ&bundleVersion=3.4.5.6&otaClassifier=otaClassifier",
-          OtaHtmlGenerator.generateHtmlServiceUrl(url, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
+          OtaHtmlGenerator.generateHtmlServiceUrl(url, null, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
                 null, otaClassifier).toExternalForm());
   }
   
