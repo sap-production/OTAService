@@ -36,12 +36,13 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
 
   public final static String IPA_URL = "ipaUrl";
   public final static String PLIST_URL = "plistUrl";
+  public final static String HTML_QRCODE_URL = "htmlQrcodeUrl";
   public static final String TITLE = "title";
   public static final String BUNDLE_IDENTIFIER = "bundleIdentifier";
   public static final String BUNDLE_VERSION = "bundleVersion";
   public static final String IPA_CLASSIFIER = "ipaClassifier";
   public static final String OTA_CLASSIFIER = "otaClassifier";
-  
+
   /**
    * Parameters required for the <code>OtaHtmlGenerator</code>.
    */
@@ -56,24 +57,27 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
      *          The bundle identifier
      * @param plistUrl
      *          The complete OTA PLIST Service URL for this App containing all parameters.
+     * @param htmlServiceQrcodeUrl
      * @param ipaClassifier
      *          The classifier used in the IPA artifact. If null no classifier will be used.
      * @param otaClassifier
      *          The classifier used in the OTA HTML artifact. If null no classifier will be used.
      * @throws MalformedURLException
      */
-    public Parameters(String referer, String title, String bundleIdentifier, URL plistUrl, String ipaClassifier,
+    public Parameters(String referer, String title, String bundleIdentifier, URL plistUrl, URL htmlServiceQrcodeUrl,
+          String ipaClassifier,
           String otaClassifier, Map<String, String> initParams)
           throws MalformedURLException
     {
       super();
       URL ipaUrl = LibUtils.generateDirectIpaUrl(referer, ipaClassifier, otaClassifier);
-      if(initParams != null) {
+      if (initParams != null) {
         mappings.putAll(initParams);
       }
       mappings.put(IPA_URL, ipaUrl.toExternalForm());
       mappings.put(BUNDLE_IDENTIFIER, bundleIdentifier);
       mappings.put(PLIST_URL, plistUrl.toExternalForm());
+      mappings.put(HTML_QRCODE_URL, htmlServiceQrcodeUrl == null ? null : htmlServiceQrcodeUrl.toExternalForm());
       mappings.put(TITLE, title);
     }
   }
@@ -81,13 +85,14 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
   static final String DEFAULT_TEMPLATE = "template.html";
   private static Map<String, OtaHtmlGenerator> instances = new HashMap<String, OtaHtmlGenerator>();
 
-  public static OtaHtmlGenerator getInstance() {
+  public static OtaHtmlGenerator getInstance()
+  {
     return getInstance(null);
   }
 
   public static synchronized OtaHtmlGenerator getInstance(String template)
   {
-    if(StringUtils.isEmpty(template)) {
+    if (StringUtils.isEmpty(template)) {
       template = DEFAULT_TEMPLATE;
     }
 
@@ -96,7 +101,8 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
     if (!instances.keySet().contains(template)) {
       instance = new OtaHtmlGenerator(template);
       instances.put(template, instance);
-    } else {
+    }
+    else {
       instance = instances.get(template);
     }
 

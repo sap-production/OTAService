@@ -19,7 +19,6 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
-import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;

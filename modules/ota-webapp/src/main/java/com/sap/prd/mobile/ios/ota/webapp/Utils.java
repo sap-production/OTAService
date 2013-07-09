@@ -19,17 +19,23 @@
  */
 package com.sap.prd.mobile.ios.ota.webapp;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.sonatype.plexus.components.cipher.Base64;
 
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageConfig;
 import com.sap.prd.mobile.ios.ota.lib.LibUtils;
 
 public class Utils
@@ -59,7 +65,7 @@ public class Utils
   /**
    * Returns the referer from parameter 'Referer' or from header parameter 'Referer'. The request
    * parameter 'Referer' (if set) has priority to the header referer.
-   *
+   * 
    * @param request
    * @return referer or null if not existing in neither of both
    * @throws IOException
@@ -77,10 +83,10 @@ public class Utils
   /**
    * Returns the referer from parameter 'Referer' or from header parameter 'Referer'. The request
    * parameter 'Referer' (if set) has priority to the header referer.
-   *
+   * 
    * If no referer can be found a 400 error is send to the client and this method throws a
    * ServletException.
-   *
+   * 
    * @param request
    * @param response
    * @return
@@ -174,8 +180,8 @@ public class Utils
    * <td>If the <code>serviceName</code> is missing null is returned</code></td>
    * </tr>
    * </table>
-   *
-   *
+   * 
+   * 
    * @param request
    *          The request containing the requestURI
    * @param serviceName
@@ -211,26 +217,27 @@ public class Utils
   /**
    * Splits "key=value" at '=' and returns {"key", "value"}.<br>
    * For "value" (without '=') {"value"} is returned.
-   *
+   * 
    * @param decoded
    * @return
    */
   static String[] parseKeyValuePair(String decoded)
   {
-    if(decoded == null) {
+    if (decoded == null) {
       return null;
     }
     int idx = decoded.indexOf("=");
-    if(idx < 0) {
+    if (idx < 0) {
       return new String[] { decoded };
-    } else {
+    }
+    else {
       return new String[] { decoded.substring(0, idx), decoded.substring(idx + 1) };
     }
   }
 
   /**
    * Searches in the map for an element having the specified key assigned and returns the value.
-   *
+   * 
    * @param map
    * @param key
    * @return
@@ -248,6 +255,46 @@ public class Utils
       }
     }
     return null;
+  }
+
+  public static void sendQRCode(HttpServletRequest request, HttpServletResponse response, String contents)
+        throws IOException, WriterException, URISyntaxException
+  {
+    sendQRCode(request, response, contents, null);
+  }
+
+  public static void sendQRCode(HttpServletRequest request, HttpServletResponse response, String contents,
+        MatrixToImageConfig config) throws IOException, WriterException, URISyntaxException
+  {
+    response.setContentType("image/png");
+    ServletOutputStream os = response.getOutputStream();
+    try {
+      if (config == null) {
+        QREncoder.encode(contents, os);
+      }
+      else {
+        QREncoder.encode(contents, os, config);
+      }
+      os.flush();
+    }
+    finally {
+      closeQuietly(os);
+    }
+  }
+
+  public final static String QR_ON_COLOR = "qrOnColor";
+  public final static String QR_OFF_COLOR = "qrOffColor";
+  public final static int QR_ON_COLOR_DEFAULT = 0xFF000000;
+  public final static int QR_OFF_COLOR_DEFAULT = 0x00FFFFFF;
+
+  public static MatrixToImageConfig getMatrixToImageConfig(HttpServletRequest request)
+  {
+    String onString = request.getParameter(QR_ON_COLOR);
+    String offString = request.getParameter(QR_OFF_COLOR);
+    if (onString == null || offString == null) return null;
+    int on = Integer.parseInt(onString);
+    int off = Integer.parseInt(offString);
+    return new MatrixToImageConfig(on, off);
   }
 
 }

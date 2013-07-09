@@ -57,7 +57,7 @@ public class OtaHtmlGeneratorTest
     URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, referer, title,
           bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier);
     String generated = OtaHtmlGenerator.getInstance().generate(
-          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, initParams));
+          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, null, initParams));
 
     assertContains(String.format("Install App: %s", title), generated);
     
@@ -75,7 +75,7 @@ public class OtaHtmlGeneratorTest
     URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, referer, title,
           bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier);
     String generated = OtaHtmlGenerator.getInstance("alternativeTemplate.html").generate(
-          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, initParams));
+          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, null, initParams));
     checkAlternativeResult(plistURL, generated);
   }
 
@@ -87,7 +87,7 @@ public class OtaHtmlGeneratorTest
     File templateFile = new File("./src/test/resources/alternativeTemplate.html");
     assertTrue("File does not exist at "+templateFile.getAbsolutePath(), templateFile.isFile());
     String generated = OtaHtmlGenerator.getInstance(templateFile.getAbsolutePath()).generate(
-          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, initParams));
+          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, null, initParams));
     checkAlternativeResult(plistURL, generated);
   }
 
