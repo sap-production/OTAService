@@ -38,7 +38,7 @@ public class TestUtils
   
   public static void assertOtaLink(CharSequence s, String plistURL, String bundleIdentifier)
   {
-    Pattern checkOtaLinkPattern = Pattern.compile("<a class=\"button\" href='itms-services:///\\?action=download-manifest&url=([^']+)'>Install Over-The-Air</a>");
+    Pattern checkOtaLinkPattern = Pattern.compile("href='itms-services:///\\?action=download-manifest&url=([^']+)'>Install Over-The-Air</a>");
     Matcher checkOtaLinkMatcher = checkOtaLinkPattern.matcher(s);
     assertTrue("Ota link not found in "+s, checkOtaLinkMatcher.find());
     assertEquals(plistURL, checkOtaLinkMatcher.group(1));

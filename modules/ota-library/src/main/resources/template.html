@@ -38,6 +38,7 @@
 				min-width: 500px;
 				max-width: 650px;
 				margin: 0 auto; /*Center container on page*/
+				text-align: right;
 			}
 								
 			.contentbox
@@ -94,37 +95,121 @@
 				background-color: #666;
 				box-shadow: 1px 1px 10px #818181;
 			}
+			
+			a.disabled:link, a.disabled:visited, a.disabled:hover, a.disabled:active {
+				background-color: #cccccc;
+				border-color: #cccccc;
+				cursor: default;
+			}
+
+			a.qrcodeToggleLink:link, a.qrcodeToggleLink:visited, a.qrcodeToggleLink:hover, a.qrcodeToggleLink:active {
+				font-size: 7pt;
+				padding-bottom: 5px;
+				color: #888888;
+			}
+			
+			.black_overlay{
+    			display: none;
+    			position: absolute;
+    			top: 0%;
+    			left: 0%;
+    			width: 100%;
+    			height: 100%;
+    			background-color: black;
+    			z-index:1001;
+				-moz-opacity: 0.8;
+				opacity:.80;
+				filter: alpha(opacity=80);
+			}
 		</style>
+		
+		<script type="text/javascript" src="http://code.jquery.com/jquery-latest.pack.js"></script>
+		
+		<script type="text/javascript">
+			
+			var lastZIndex = 0;
+			
+			function isIDevice() {
+				var agent = navigator.userAgent;
+				if(agent.indexOf("iPad") !== -1) return true;
+				if(agent.indexOf("iPhone") !== -1) return true;
+				return false;
+			}
+			
+			$(document).ready(function() {
+				if(isIDevice()) {
+				  $("#otaButtonDiv").css("display", "inline");
+				  $("#leftTd").attr("colspan", "2");
+				  $("#rightTd").remove();
+				} else {
+				  $("#otaQrButton").css("display", "inline");
+				  $("#ipaButton").css("display", "inline");
+				}
+			});
+			
+			function showLightBoxElement(element) {
+				$("#blackOverlay").css("display", "block");
+				$("#blackOverlay").click(hideLightBoxElement);
+				lastElement = element;
+				lastZIndex = element.css("z-index");
+				element.css("z-index", "1002");
+				element.css("display", "block");
+				element.click(hideLightBoxElement);
+			}
+
+			function hideLightBoxElement() {
+				$("#blackOverlay").css("display", "none");
+				lastElement.css("z-index", lastZIndex);
+				lastElement.css("display", "none");
+			}
+			
+		</script>
 		
 </head>
 <body>
 
 <div class="maincontainer">
+
+<a class="qrcodeToggleLink" href="#" onClick="showLightBoxElement($('#installPageQrDiv'))">Show Install Page QRCode</a>
+
 <div class="contentbox">
 
-
-<table width="99%" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2" style="padding:15px">
+<table cellpadding="0" cellspacing="0" width="99%">
+  <tbody><tr>
+    <td colspan="2" height="1px" style="padding:15px;text-align:left;vertical-align:top">
 	  <h2>Install App: $title</h2>
-    </td>
   </tr>
   <tr>
-    <td width='50%' align='center' style="padding:15px">
-	  <a class="button" href='itms-services:///?action=download-manifest&url=$plistUrl'>Install Over-The-Air</a>
+    <td id="leftTd" style="padding:15px" align="center" valign="top" width="50%">
+	  <div id="otaButtonDiv" style="display:none">
+		<a id="otaButton" class="button" href='itms-services:///?action=download-manifest&url=$plistUrl'>Install Over-The-Air</a><br/><br/>
+		<a id="otaQrLink" class="qrcodeToggleLink" href="#" onClick="showLightBoxElement($('#otaQrDiv'))">Show OTA Install QRCode</a>
+	  </div>
+	  <a id="otaQrButton" style="display:none" class="button" href="#" onClick="showLightBoxElement($('#otaQrDiv'))">Show OTA Install QRCode</a>
 	</td>
-    <td width='50%' align='center' style="padding:15px">
-	  <a class="button" href='$ipaUrl'>Install via iTunes</a>
+    <td id="rightTd" style="padding:15px" align="center"  valign="top" width="50%">
+	  <a id="ipaButton" style="display:none" class="button" href='$ipaUrl'>Install via iTunes</a>
     </td>
   </tr>
-</table>
+</tbody></table>
 
-<img src="$plistUrl?action=qrcode"/>
-
-<img src="$htmlQrcodeUrl"/>
 
 </div>
 </div>
+
+
+
+<!-- Dynamic elements: -->
+
+<div id="installPageQrDiv" style="position:absolute;top:50px;left:240px;display:none">
+  <img id="installPageQr" src="$htmlQrcodeUrl"/>
+</div>
+
+<div id="otaQrDiv" style="position:absolute;top:50px;left:240px;display:none">
+	<img border="0" src="$plistUrl?action=qrcode"/>
+</div>
+
+<div id="blackOverlay" class="black_overlay"></div>
 
 </body>
 </html>

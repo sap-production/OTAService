@@ -63,7 +63,7 @@ public class OtaHtmlGeneratorTest
     
     TestUtils.assertOtaLink(generated, plistURL.toString(), bundleIdentifier);
     
-    Pattern checkIpaLinkPattern = Pattern.compile("<a class=\"button\" href='([^']+)'[^>]*>Install via iTunes</a>");
+    Pattern checkIpaLinkPattern = Pattern.compile("href='([^']+)'[^>]*>Install via iTunes</a>");
     Matcher checkIpaLinkMatcher = checkIpaLinkPattern.matcher(generated);
     assertTrue("Ipa link not found", checkIpaLinkMatcher.find());
     assertEquals(checkIpaURL, checkIpaLinkMatcher.group(1));

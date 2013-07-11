@@ -73,6 +73,7 @@ public class OtaHtmlService extends HttpServlet
     //TODO: REWORK. PlistService now uses Base64+URLEncoded parameters, and no URL Parameters but slashes!
 
     try {
+
       String originalReferer = Utils.getRefererSendError(request, response);
       //String referer = removeFilePartFromURL(originalReferer);
 
@@ -132,11 +133,14 @@ public class OtaHtmlService extends HttpServlet
 
         HashMap<String, String> initParameters = getInitParameters();
         String htmlTemplatePath = initParameters.get(HTML_TEMPLATE_PATH_KEY);
+        final boolean DEBUG = initParameters.get("debug") != null && initParameters.get("debug").equalsIgnoreCase("true");
 
         response.setContentType("text/html");
         PrintWriter writer = response.getWriter();
         try {
-          OtaHtmlGenerator.getInstance(htmlTemplatePath).generate(
+          OtaHtmlGenerator generator = OtaHtmlGenerator.getInstance(htmlTemplatePath, DEBUG);
+          LOG.info("Using HTML Template: " + generator.getTemplateName() + " (configured: " + htmlTemplatePath + ")");
+          generator.generate(
                 writer,
                 new Parameters(originalReferer, request.getParameter(TITLE), request.getParameter(BUNDLE_IDENTIFIER),
                       plistUrl, htmlServiceQrcodeUrl, request.getParameter(IPA_CLASSIFIER),

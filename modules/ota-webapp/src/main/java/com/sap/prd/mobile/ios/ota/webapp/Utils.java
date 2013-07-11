@@ -311,4 +311,41 @@ public class Utils
     return new MatrixToImageConfig(on, off);
   }
 
+  //user-agent infos: E.g. http://html5-mobile.de/blog/wichtigsten-user-agents-mobile-devices-jquery-mobile    
+  // user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3
+  // user-agent=Mozilla/5.0 (iPad; CPU OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10B329 Safari/8536.25
+  // user-agent=Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)
+
+  public static boolean isIDevice(HttpServletRequest request) throws UnknownInformationException
+  {
+    String agent = request.getHeader("user-agent");
+    if(agent == null) throw new UnknownInformationException("user-agent not specified in header");
+    return agent.contains("iPhone") || agent.contains("iPad");
+  }
+
+  public static boolean isMobile(HttpServletRequest request) throws UnknownInformationException
+  {
+    String agent = request.getHeader("user-agent");
+    if(agent == null) throw new UnknownInformationException("user-agent not specified in header");
+    if(agent.contains("Mobile")) return true;
+    if(agent.contains("iPhone") || agent.contains("iPad")) return true;
+    if(agent.contains("Android")) return true;
+    //TODO: ...
+    return false;
+  }
+
+  public static boolean isDesktop(HttpServletRequest request) throws UnknownInformationException
+  {
+    return !isMobile(request);
+  }
+
+  
+  @SuppressWarnings("serial")
+  static class UnknownInformationException extends RuntimeException {
+    public UnknownInformationException(String string)
+    {
+      super(string);
+    }
+  }
+  
 }

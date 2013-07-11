@@ -19,6 +19,8 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
+import static org.apache.velocity.util.StringUtils.nullTrim;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -31,7 +33,6 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.RuntimeConstants;
-import org.apache.velocity.util.StringUtils;
 
 import com.sap.prd.mobile.ios.ota.lib.VelocityBase.IParameters;
 
@@ -49,7 +50,7 @@ public abstract class VelocityBase<P extends IParameters>
 
   protected VelocityBase(String templateName)
   {
-    if (StringUtils.nullTrim(templateName) == null) throw new IllegalArgumentException("templateName not specified");
+    if (nullTrim(templateName) == null) throw new IllegalArgumentException("templateName not specified");
     VelocityEngine ve = new VelocityEngine();
     ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "class,jar,file");
     ve.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");

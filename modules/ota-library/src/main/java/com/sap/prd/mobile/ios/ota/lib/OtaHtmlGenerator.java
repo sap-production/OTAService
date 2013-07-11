@@ -19,6 +19,10 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -93,13 +97,25 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
 
   public static synchronized OtaHtmlGenerator getInstance(String template)
   {
-    if (StringUtils.isEmpty(template)) {
+    return getInstance(template, false);
+  }
+  
+  public static synchronized OtaHtmlGenerator getInstance(String template, boolean forceNewInstance)
+  {
+    if (isEmpty(template)) {
       template = DEFAULT_TEMPLATE;
+    }
+    else {
+      File file = new File(template);
+      if (file.isFile() && file.getName().equals(DEFAULT_TEMPLATE))
+        throw new IllegalArgumentException(format(
+              "Custom template (configured in e.g. 'Tomcat/conf/Catalina/localhost/ota-service.xml') " +
+                    "must not be named '%s'. Current path: '%s'", DEFAULT_TEMPLATE, template));
     }
 
     OtaHtmlGenerator instance;
 
-    if (!instances.keySet().contains(template)) {
+    if (forceNewInstance || !instances.keySet().contains(template)) {
       instance = new OtaHtmlGenerator(template);
       instances.put(template, instance);
     }
