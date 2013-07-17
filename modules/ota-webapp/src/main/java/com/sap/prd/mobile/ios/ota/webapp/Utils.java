@@ -22,6 +22,7 @@ package com.sap.prd.mobile.ios.ota.webapp;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.decode;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -274,21 +275,16 @@ public class Utils
   public static void sendQRCode(HttpServletRequest request, HttpServletResponse response, String contents)
         throws IOException, WriterException, URISyntaxException
   {
-    sendQRCode(request, response, contents, null);
+    sendQRCode(request, response, contents, null, null);
   }
 
   public static void sendQRCode(HttpServletRequest request, HttpServletResponse response, String contents,
-        MatrixToImageConfig config) throws IOException, WriterException, URISyntaxException
+        MatrixToImageConfig config, Dimension dimension) throws IOException, WriterException, URISyntaxException
   {
     response.setContentType("image/png");
     ServletOutputStream os = response.getOutputStream();
     try {
-      if (config == null) {
-        QREncoder.encode(contents, os);
-      }
-      else {
-        QREncoder.encode(contents, os, config);
-      }
+      QREncoder.encode(contents, os, config, dimension);
       os.flush();
     }
     finally {

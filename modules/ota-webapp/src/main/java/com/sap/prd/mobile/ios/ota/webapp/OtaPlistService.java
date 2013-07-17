@@ -31,6 +31,7 @@ import static com.sap.prd.mobile.ios.ota.webapp.Utils.getValueFromUriParameterMa
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
@@ -113,7 +114,7 @@ public class OtaPlistService extends HttpServlet
               originalReferer, title, bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier).toExternalForm();
         String data = plistUrl + "?action=itmsRedirect";
         LOG.info("Sending QRCode for " + data);
-        sendQRCode(request, response, data, getMatrixToImageConfig(request));
+        sendQRCode(request, response, data, getMatrixToImageConfig(request), new Dimension(400, 400));
 
       }
       else if (action != null && action.equals("itmsRedirect")) {

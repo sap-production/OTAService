@@ -19,6 +19,7 @@
  */
 package com.sap.prd.mobile.ios.ota.webapp;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -34,19 +35,23 @@ public class QREncoder
 
   private static final BarcodeFormat DEFAULT_BARCODE_FORMAT = BarcodeFormat.QR_CODE;
   private static final String DEFAULT_IMAGE_FORMAT = "PNG";
-  private static final int DEFAULT_WIDTH = 200;
-  private static final int DEFAULT_HEIGHT = 200;
+  private static final int DEFAULT_WIDTH = 400;
+  private static final int DEFAULT_HEIGHT = 400;
+  private static final MatrixToImageConfig DEFAULT_MATRIX_CONFIG = new MatrixToImageConfig(0xFF000000, 0x00FFFFFF);
 
   public static void encode(String contents, OutputStream stream) throws IOException, WriterException
   {
-    encode(contents, stream, new MatrixToImageConfig(0xFF000000, 0x00FFFFFF));
+    encode(contents, stream, DEFAULT_MATRIX_CONFIG, null);
   }
 
-  public static void encode(String contents, OutputStream stream, MatrixToImageConfig config) throws IOException, WriterException
+  public static void encode(String contents, OutputStream stream, MatrixToImageConfig config, Dimension dimension)
+        throws IOException, WriterException
   {
     MultiFormatWriter barcodeWriter = new MultiFormatWriter();
-    BitMatrix matrix = barcodeWriter.encode(contents, DEFAULT_BARCODE_FORMAT, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-    MatrixToImageWriter.writeToStream(matrix, DEFAULT_IMAGE_FORMAT, stream, config);
+    BitMatrix matrix = barcodeWriter.encode(contents, DEFAULT_BARCODE_FORMAT,
+          (dimension == null || dimension.width <= 0) ? DEFAULT_WIDTH : dimension.width,
+          (dimension == null || dimension.height <= 0) ? DEFAULT_HEIGHT : dimension.height);
+    MatrixToImageWriter.writeToStream(matrix, DEFAULT_IMAGE_FORMAT, stream,
+          config != null ? config : DEFAULT_MATRIX_CONFIG);
   }
-
 }

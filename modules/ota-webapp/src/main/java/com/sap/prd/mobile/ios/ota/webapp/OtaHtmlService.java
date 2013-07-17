@@ -32,6 +32,7 @@ import static com.sap.prd.mobile.ios.ota.webapp.Utils.getMatrixToImageConfig;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
@@ -97,7 +98,7 @@ public class OtaHtmlService extends HttpServlet
               request.getParameter(IPA_CLASSIFIER), request.getParameter(OTA_CLASSIFIER)));
 
         LOG.info("Sending QRCode for " + htmlServiceUrl.toString());
-        sendQRCode(request, response, htmlServiceUrl.toString(), getMatrixToImageConfig(request));
+        sendQRCode(request, response, htmlServiceUrl.toString(), getMatrixToImageConfig(request), new Dimension(400, 400));
 
       }
       else {
