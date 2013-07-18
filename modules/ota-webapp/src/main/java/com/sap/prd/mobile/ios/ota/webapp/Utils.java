@@ -28,6 +28,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -343,5 +345,23 @@ public class Utils
       super(string);
     }
   }
+  
+  public static String getRequestParams(HttpServletRequest request)
+  {
+    StringBuilder sb = new StringBuilder();
+    sb.append("REQUEST URI: ").append(request.getRequestURI());
+    sb.append(", REQUEST PARAMETERS:{");
+    Map<String, String[]> params = request.getParameterMap();
+    boolean first = true;
+    for(Object key : params.keySet()) {
+      String[] values = params.get(key);
+      if(!first) sb.append(", ");
+      sb.append(key).append("=").append(Arrays.toString(values));
+      first = false;
+    }
+    sb.append("}");
+    return sb.toString();
+  }
+
   
 }

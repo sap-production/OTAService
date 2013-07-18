@@ -156,7 +156,7 @@ public class OtaHtmlService extends HttpServlet
     }
     catch (Exception e) {
       LOG.log(Level.SEVERE, String.format(
-            "Exception while processing GET request from '%s'", request.getRemoteAddr()), e);
+            "Exception while processing GET request from '%s' (%s)", request.getRemoteAddr(), Utils.getRequestParams(request)), e);
     }
   }
 

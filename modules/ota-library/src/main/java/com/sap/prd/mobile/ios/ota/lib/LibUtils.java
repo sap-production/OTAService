@@ -77,7 +77,7 @@ public class LibUtils
       return new URL(ipaUrl);
     }
     else {
-      throw new MalformedURLException("Referer does not end with a file (e.g. .htm)");
+      throw new MalformedURLException("Referer does not end with a file (e.g. .htm): "+referer);
     }
   }
 
