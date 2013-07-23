@@ -19,12 +19,21 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_IDENTIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_VERSION;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_IPA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_IPA_URL;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_OTA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
+import static com.sap.prd.mobile.ios.ota.lib.LibUtils.encode;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import org.apache.commons.lang.StringUtils;
+import java.util.Map;
 
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.Parameters;
 
@@ -33,14 +42,6 @@ import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.Parameters;
  */
 public class OtaPlistGenerator extends VelocityBase<Parameters>
 {
-
-  public static final String IPA_URL = "ipaUrl";
-  public static final String BUNDLE_IDENTIFIER = "bundleIdentifier";
-  public static final String BUNDLE_VERSION = "bundleVersion";
-  public static final String TITLE = "title";
-  public static final String IPA_CLASSIFIER = "ipaClassifier";
-  public static final String OTA_CLASSIFIER = "otaClassifier";
-  public static final String REFERER = "Referer";
 
   /**
    * Parameters required for the <code>OtaPlistGenerator</code>.
@@ -63,16 +64,16 @@ public class OtaPlistGenerator extends VelocityBase<Parameters>
      *          The classifier used in the OTA HTML artifact. If null no classifier will be used.
      * @throws MalformedURLException
      */
-    public Parameters(String referer, String title, String bundleIdentifier, String bundleVersion,
-          String ipaClassifier, String otaClassifier)
+    public Parameters(Map<String, String> requestParams)
           throws MalformedURLException
     {
       super();
-      URL ipaURL = LibUtils.generateDirectIpaUrl(referer, ipaClassifier, otaClassifier);
-      mappings.put(IPA_URL, ipaURL.toExternalForm());
-      mappings.put(BUNDLE_IDENTIFIER, bundleIdentifier);
-      mappings.put(BUNDLE_VERSION, bundleVersion);
-      mappings.put(TITLE, title);
+      URL ipaURL = LibUtils.generateDirectIpaUrl(requestParams.get(KEY_REFERER),
+            requestParams.get(KEY_IPA_CLASSIFIER), requestParams.get(KEY_OTA_CLASSIFIER));
+      mappings.put(KEY_IPA_URL, ipaURL.toExternalForm());
+      mappings.put(KEY_BUNDLE_IDENTIFIER, requestParams.get(KEY_BUNDLE_IDENTIFIER));
+      mappings.put(KEY_BUNDLE_VERSION, requestParams.get(KEY_BUNDLE_VERSION));
+      mappings.put(KEY_TITLE, requestParams.get(KEY_TITLE));
     }
   }
 
@@ -124,20 +125,19 @@ public class OtaPlistGenerator extends VelocityBase<Parameters>
    * @return the URL
    * @throws IOException
    */
-  public static URL generatePlistRequestUrl(String plistServiceUrl, String referer, String title,
-        String bundleIdentifier, String bundleVersion, String ipaClassifier, String otaClassifier) throws IOException
+  public static URL generatePlistRequestUrl(String plistServiceUrl, Map<String, String> params) throws IOException
   {
     if (plistServiceUrl == null) {
       throw new NullPointerException("serviceUrl null");
     }
     String urlString = String.format("%s/%s/%s/%s/%s%s%s",
           plistServiceUrl,
-          LibUtils.encode(REFERER + "=" + referer),
-          LibUtils.encode(TITLE + "=" + title),
-          LibUtils.encode(BUNDLE_IDENTIFIER + "=" + bundleIdentifier),
-          LibUtils.encode(BUNDLE_VERSION + "=" + bundleVersion),
-          (StringUtils.isEmpty(ipaClassifier) ? "" : "/" + LibUtils.encode(IPA_CLASSIFIER + "=" + ipaClassifier)),
-          (StringUtils.isEmpty(otaClassifier) ? "" : "/" + LibUtils.encode(OTA_CLASSIFIER + "=" + otaClassifier))
+          LibUtils.encode(KEY_REFERER + "=" + params.get(KEY_REFERER)),
+          LibUtils.encode(KEY_TITLE + "=" + params.get(KEY_TITLE)),
+          LibUtils.encode(KEY_BUNDLE_IDENTIFIER + "=" + params.get(KEY_BUNDLE_IDENTIFIER)),
+          LibUtils.encode(KEY_BUNDLE_VERSION + "=" + params.get(KEY_BUNDLE_VERSION)),
+          (isEmpty(params.get(KEY_IPA_CLASSIFIER)) ? "" : "/" + encode(KEY_IPA_CLASSIFIER + "=" + params.get(KEY_IPA_CLASSIFIER))),
+          (isEmpty(params.get(KEY_OTA_CLASSIFIER)) ? "" : "/" + encode(KEY_OTA_CLASSIFIER + "=" + params.get(KEY_OTA_CLASSIFIER)))
       );
     return new URL(urlString);
   }

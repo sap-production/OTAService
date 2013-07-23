@@ -19,6 +19,14 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_IDENTIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_VERSION;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_HTML_QRCODE_URL;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_IPA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_OTA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_PLIST_URL;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -37,16 +45,6 @@ import com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.Parameters;
  */
 public class OtaHtmlGenerator extends VelocityBase<Parameters>
 {
-
-  public final static String IPA_URL = "ipaUrl";
-  public final static String PLIST_URL = "plistUrl";
-  public final static String HTML_QRCODE_URL = "htmlQrcodeUrl";
-  public static final String TITLE = "title";
-  public static final String BUNDLE_IDENTIFIER = "bundleIdentifier";
-  public static final String BUNDLE_VERSION = "bundleVersion";
-  public static final String IPA_CLASSIFIER = "ipaClassifier";
-  public static final String OTA_CLASSIFIER = "otaClassifier";
-  public static final String REFERER = "Referer";
 
   /**
    * Parameters required for the <code>OtaHtmlGenerator</code>.
@@ -69,21 +67,21 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
      *          The classifier used in the OTA HTML artifact. If null no classifier will be used.
      * @throws MalformedURLException
      */
-    public Parameters(String referer, String title, String bundleIdentifier, URL plistUrl, URL htmlServiceQrcodeUrl,
-          String ipaClassifier,
-          String otaClassifier, Map<String, String> initParams)
+    public Parameters(URL plistUrl, URL htmlServiceQrcodeUrl, Map<String, String> requestParams,
+          Map<String, String> initParams)
           throws MalformedURLException
     {
       super();
-      URL ipaUrl = LibUtils.generateDirectIpaUrl(referer, ipaClassifier, otaClassifier);
+      URL ipaUrl = LibUtils.generateDirectIpaUrl(requestParams.get(KEY_REFERER), requestParams.get(KEY_IPA_CLASSIFIER),
+            requestParams.get(KEY_OTA_CLASSIFIER));
       if (initParams != null) {
         mappings.putAll(initParams);
       }
-      mappings.put(IPA_URL, ipaUrl.toExternalForm());
-      mappings.put(BUNDLE_IDENTIFIER, bundleIdentifier);
-      mappings.put(PLIST_URL, plistUrl.toExternalForm());
-      mappings.put(HTML_QRCODE_URL, htmlServiceQrcodeUrl == null ? null : htmlServiceQrcodeUrl.toExternalForm());
-      mappings.put(TITLE, title);
+      mappings.put(Constants.KEY_IPA_URL, ipaUrl.toExternalForm());
+      mappings.put(KEY_BUNDLE_IDENTIFIER, requestParams.get(KEY_BUNDLE_IDENTIFIER));
+      mappings.put(KEY_PLIST_URL, plistUrl.toExternalForm());
+      mappings.put(KEY_HTML_QRCODE_URL, htmlServiceQrcodeUrl == null ? null : htmlServiceQrcodeUrl.toExternalForm());
+      mappings.put(KEY_TITLE, requestParams.get(KEY_TITLE));
     }
   }
 
@@ -99,7 +97,7 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
   {
     return getInstance(template, false);
   }
-  
+
   public static synchronized OtaHtmlGenerator getInstance(String template, boolean forceNewInstance)
   {
     if (isEmpty(template)) {
@@ -149,33 +147,32 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
    * @return the URL
    * @throws MalformedURLException
    */
-  public static URL generateHtmlServiceUrl(URL htmlServiceUrl, String referer, String title, String bundleIdentifier,
-        String bundleVersion, String ipaClassifier, String otaClassifier) throws MalformedURLException
+  public static URL generateHtmlServiceUrl(URL htmlServiceUrl, Map<String, String> params) throws MalformedURLException
   {
-    if (referer == null) {
+    if (params.get(KEY_REFERER) == null) {
       return new URL(String.format("%s?%s=%s&%s=%s&%s=%s%s%s",
             htmlServiceUrl.toExternalForm(),
-            TITLE, LibUtils.urlEncode(title),
-            BUNDLE_IDENTIFIER, LibUtils.urlEncode(bundleIdentifier),
-            BUNDLE_VERSION, LibUtils.urlEncode(bundleVersion),
-            (StringUtils.isEmpty(ipaClassifier) ? "" :
-                  String.format("&%s=%s", IPA_CLASSIFIER, LibUtils.urlEncode(ipaClassifier))),
-            (StringUtils.isEmpty(otaClassifier) ? "" :
-                  String.format("&%s=%s", OTA_CLASSIFIER, LibUtils.urlEncode(otaClassifier)))
+            KEY_TITLE, LibUtils.urlEncode(params.get(KEY_TITLE)),
+            KEY_BUNDLE_IDENTIFIER, LibUtils.urlEncode(params.get(KEY_BUNDLE_IDENTIFIER)),
+            KEY_BUNDLE_VERSION, LibUtils.urlEncode(params.get(KEY_BUNDLE_VERSION)),
+            (StringUtils.isEmpty(params.get(KEY_IPA_CLASSIFIER)) ? "" :
+                  String.format("&%s=%s", KEY_IPA_CLASSIFIER, LibUtils.urlEncode(params.get(KEY_IPA_CLASSIFIER)))),
+            (StringUtils.isEmpty(params.get(KEY_OTA_CLASSIFIER)) ? "" :
+                  String.format("&%s=%s", KEY_OTA_CLASSIFIER, LibUtils.urlEncode(params.get(KEY_OTA_CLASSIFIER))))
         ));
 
     }
     else {
       return new URL(String.format("%s?%s=%s&%s=%s&%s=%s&%s=%s%s%s",
             htmlServiceUrl.toExternalForm(),
-            REFERER, LibUtils.encode(REFERER + "=" + referer),
-            TITLE, LibUtils.urlEncode(title),
-            BUNDLE_IDENTIFIER, LibUtils.urlEncode(bundleIdentifier),
-            BUNDLE_VERSION, LibUtils.urlEncode(bundleVersion),
-            (StringUtils.isEmpty(ipaClassifier) ? "" :
-                  String.format("&%s=%s", IPA_CLASSIFIER, LibUtils.urlEncode(ipaClassifier))),
-            (StringUtils.isEmpty(otaClassifier) ? "" :
-                  String.format("&%s=%s", OTA_CLASSIFIER, LibUtils.urlEncode(otaClassifier)))
+            KEY_REFERER, LibUtils.encode(KEY_REFERER + "=" + params.get(KEY_REFERER)),
+            KEY_TITLE, LibUtils.urlEncode(params.get(KEY_TITLE)),
+            KEY_BUNDLE_IDENTIFIER, LibUtils.urlEncode(params.get(KEY_BUNDLE_IDENTIFIER)),
+            KEY_BUNDLE_VERSION, LibUtils.urlEncode(params.get(KEY_BUNDLE_VERSION)),
+            (StringUtils.isEmpty(params.get(KEY_IPA_CLASSIFIER)) ? "" :
+                  String.format("&%s=%s", KEY_IPA_CLASSIFIER, LibUtils.urlEncode(params.get(KEY_IPA_CLASSIFIER)))),
+            (StringUtils.isEmpty(params.get(KEY_OTA_CLASSIFIER)) ? "" :
+                  String.format("&%s=%s", KEY_OTA_CLASSIFIER, LibUtils.urlEncode(params.get(KEY_OTA_CLASSIFIER))))
         ));
     }
   }

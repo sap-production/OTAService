@@ -19,11 +19,11 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
-import static com.sap.prd.mobile.ios.ota.lib.OtaBuildHtmlGenerator.BUNDLE_IDENTIFIER;
-import static com.sap.prd.mobile.ios.ota.lib.OtaBuildHtmlGenerator.BUNDLE_VERSION;
-import static com.sap.prd.mobile.ios.ota.lib.OtaBuildHtmlGenerator.IPA_CLASSIFIER;
-import static com.sap.prd.mobile.ios.ota.lib.OtaBuildHtmlGenerator.OTA_CLASSIFIER;
-import static com.sap.prd.mobile.ios.ota.lib.OtaBuildHtmlGenerator.TITLE;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_IDENTIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_VERSION;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_IPA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_OTA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static com.sap.prd.mobile.ios.ota.lib.TestUtils.assertContains;
 import static org.junit.Assert.assertEquals;
 
@@ -55,11 +55,11 @@ public class OtaBuildHtmlGeneratorTest
     URL htmlServiceUrl = new URL(HTML_SERVICE);
     String generated = OtaBuildHtmlGenerator.getInstance().generate(
           new Parameters(htmlServiceUrl, title, bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier, null));
-    assertContains(TITLE + "=" + title, generated);
-    assertContains(BUNDLE_IDENTIFIER + "=" + bundleIdentifier, generated);
-    assertContains(BUNDLE_VERSION + "=" + bundleVersion, generated);
-    assertContains(IPA_CLASSIFIER + "=" + ipaClassifier, generated);
-    assertContains(OTA_CLASSIFIER + "=" + otaClassifier, generated);
+    assertContains(KEY_TITLE + "=" + title, generated);
+    assertContains(KEY_BUNDLE_IDENTIFIER + "=" + bundleIdentifier, generated);
+    assertContains(KEY_BUNDLE_VERSION + "=" + bundleVersion, generated);
+    assertContains(KEY_IPA_CLASSIFIER + "=" + ipaClassifier, generated);
+    assertContains(KEY_OTA_CLASSIFIER + "=" + otaClassifier, generated);
     assertContains(
           "<iframe id=\"iframe\" src=\""
                 + HTML_SERVICE
@@ -94,12 +94,12 @@ public class OtaBuildHtmlGeneratorTest
 
   private void checkAlternativeResult(String generated)
   {
-    assertContains(TITLE + "=" + title, generated);
+    assertContains(KEY_TITLE + "=" + title, generated);
     assertContains("ALTERNATIVE HTML BUILD TEMPLATE", generated);
-    assertContains(BUNDLE_IDENTIFIER + "=" + bundleIdentifier, generated);
-    assertContains(BUNDLE_VERSION + "=" + bundleVersion, generated);
-    assertContains(IPA_CLASSIFIER + "=" + ipaClassifier, generated);
-    assertContains(OTA_CLASSIFIER + "=" + otaClassifier, generated);
+    assertContains(KEY_BUNDLE_IDENTIFIER + "=" + bundleIdentifier, generated);
+    assertContains(KEY_BUNDLE_VERSION + "=" + bundleVersion, generated);
+    assertContains(KEY_IPA_CLASSIFIER + "=" + ipaClassifier, generated);
+    assertContains(KEY_OTA_CLASSIFIER + "=" + otaClassifier, generated);
     assertContains(
           "<a href=\""
                 + HTML_SERVICE

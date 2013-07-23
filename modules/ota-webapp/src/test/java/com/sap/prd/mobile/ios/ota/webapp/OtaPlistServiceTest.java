@@ -19,6 +19,10 @@
  */
 package com.sap.prd.mobile.ios.ota.webapp;
 
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_IDENTIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_VERSION;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.encode;
 import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlServiceTest.TEST_BUNDLEIDENTIFIER;
 import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlServiceTest.TEST_BUNDLEVERSION;
@@ -41,9 +45,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;
 
-import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator;
-import com.sap.prd.mobile.ios.ota.webapp.OtaPlistService;
-
 public class OtaPlistServiceTest
 {
   private final static String STRING_TAG_START = "<string>";
@@ -57,14 +58,14 @@ public class OtaPlistServiceTest
 
     HttpServletRequest request = mock(HttpServletRequest.class);
 
-    Map<String, String[]> paramsDummy = new HashMap<String, String[]>();
-    paramsDummy.put("x", null);
-    when(request.getParameterMap()).thenReturn(paramsDummy); //size is checked in service
-    when(request.getParameter(OtaPlistGenerator.REFERER)).thenReturn(TEST_REFERER);
-    when(request.getParameter(OtaPlistGenerator.TITLE)).thenReturn(TEST_TITLE);
-    when(request.getParameter(OtaPlistGenerator.BUNDLE_IDENTIFIER)).thenReturn(TEST_BUNDLEIDENTIFIER);
-    when(request.getParameter(OtaPlistGenerator.BUNDLE_VERSION)).thenReturn(TEST_BUNDLEVERSION);
-
+    when(request.getParameter(KEY_REFERER)).thenReturn(TEST_REFERER);
+    Map<String, String[]> map = new HashMap<String, String[]>();
+    map.put(KEY_REFERER, new String[]{TEST_REFERER});
+    map.put(KEY_TITLE, new String[]{TEST_TITLE});
+    map.put(KEY_BUNDLE_IDENTIFIER, new String[]{TEST_BUNDLEIDENTIFIER});
+    map.put(KEY_BUNDLE_VERSION, new String[]{TEST_BUNDLEVERSION});
+    when(request.getParameterMap()).thenReturn(map);
+    
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.getWriter()).thenReturn(new PrintWriter(writer));
 
@@ -87,10 +88,10 @@ public class OtaPlistServiceTest
 
     StringBuilder sb = new StringBuilder();
     sb.append("/abc/").append(OtaPlistService.SERVICE_NAME).append("/");
-    sb.append(encode(OtaPlistGenerator.REFERER + "=" + TEST_REFERER)).append("/");
-    sb.append(encode(OtaPlistGenerator.TITLE + "=" + TEST_TITLE)).append("/");
-    sb.append(encode(OtaPlistGenerator.BUNDLE_IDENTIFIER + "=" + TEST_BUNDLEIDENTIFIER)).append("/");
-    sb.append(encode(OtaPlistGenerator.BUNDLE_VERSION + "=" + TEST_BUNDLEVERSION));
+    sb.append(encode(KEY_REFERER + "=" + TEST_REFERER)).append("/");
+    sb.append(encode(KEY_TITLE + "=" + TEST_TITLE)).append("/");
+    sb.append(encode(KEY_BUNDLE_IDENTIFIER + "=" + TEST_BUNDLEIDENTIFIER)).append("/");
+    sb.append(encode(KEY_BUNDLE_VERSION + "=" + TEST_BUNDLEVERSION));
     when(request.getRequestURI()).thenReturn(sb.toString());
 
     HttpServletResponse response = mock(HttpServletResponse.class);

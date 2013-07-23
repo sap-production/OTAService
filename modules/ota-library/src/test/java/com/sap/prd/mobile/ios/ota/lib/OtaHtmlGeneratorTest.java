@@ -19,6 +19,13 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_IDENTIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_VERSION;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_IPA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_OTA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
+import static com.sap.prd.mobile.ios.ota.lib.LibUtils.buildMap;
 import static com.sap.prd.mobile.ios.ota.lib.TestUtils.assertContains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,6 +36,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +44,7 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.junit.Test;
 
 import com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.Parameters;
+
 public class OtaHtmlGeneratorTest
 {
 
@@ -47,22 +56,26 @@ public class OtaHtmlGeneratorTest
   private final static String otaClassifier = "otaClassifier";
   private final static String ipaClassifier = "ipaClassifier";
 
+  private final static Map<String, String> paramMap = buildMap(
+        KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier, KEY_BUNDLE_VERSION, bundleVersion,
+        KEY_IPA_CLASSIFIER, ipaClassifier, KEY_OTA_CLASSIFIER, otaClassifier);
+
   private static final String plistServiceUrl = "http://ota-server:8080/OTAService/PLIST";
 
   private static HashMap<String, String> initParams = new HashMap<String, String>();
-  
+
   @Test
   public void testCorrectValues() throws IOException
   {
-    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, referer, title,
-          bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier);
+    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, paramMap);
     String generated = OtaHtmlGenerator.getInstance().generate(
-          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, null, initParams));
+          new Parameters(plistURL, null, buildMap(KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier),
+                initParams));
 
     assertContains(String.format("Install App: %s", title), generated);
-    
+
     TestUtils.assertOtaLink(generated, plistURL.toString(), bundleIdentifier);
-    
+
     Pattern checkIpaLinkPattern = Pattern.compile("href='([^']+)'[^>]*>Install via iTunes</a>");
     Matcher checkIpaLinkMatcher = checkIpaLinkPattern.matcher(generated);
     assertTrue("Ipa link not found", checkIpaLinkMatcher.find());
@@ -72,22 +85,21 @@ public class OtaHtmlGeneratorTest
   @Test
   public void testAlternativeTemplateByResource() throws IOException
   {
-    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, referer, title,
-          bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier);
+    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, paramMap);
     String generated = OtaHtmlGenerator.getInstance("alternativeTemplate.html").generate(
-          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, null, initParams));
+          new Parameters(plistURL, null, buildMap(KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier),
+                initParams));
     checkAlternativeResult(plistURL, generated);
   }
 
   @Test
   public void testAlternativeTemplateByFile() throws IOException
   {
-    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, referer, title,
-          bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier);
+    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, paramMap);
     File templateFile = new File("./src/test/resources/alternativeTemplate.html");
-    assertTrue("File does not exist at "+templateFile.getAbsolutePath(), templateFile.isFile());
+    assertTrue("File does not exist at " + templateFile.getAbsolutePath(), templateFile.isFile());
     String generated = OtaHtmlGenerator.getInstance(templateFile.getAbsolutePath()).generate(
-          new Parameters(referer, title, bundleIdentifier, plistURL, null, null, null, initParams));
+          new Parameters(plistURL, null, buildMap(KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier), initParams));
     checkAlternativeResult(plistURL, generated);
   }
 
@@ -95,10 +107,10 @@ public class OtaHtmlGeneratorTest
   {
     assertContains("ALTERNATIVE HTML TEMPLATE", generated);
     assertContains(String.format("Install App: %s", title), generated);
-    assertContains("<a href='itms-services:///?action=download-manifest&url="+plistURL+"'>OTA</a>", generated);
-    assertContains("<a href='"+checkIpaURL+"'>IPA</a>", generated);
+    assertContains("<a href='itms-services:///?action=download-manifest&url=" + plistURL + "'>OTA</a>", generated);
+    assertContains("<a href='" + checkIpaURL + "'>IPA</a>", generated);
   }
-  
+
   @Test
   public void testGenerateHtmlServiceUrl() throws MalformedURLException
   {
@@ -107,27 +119,30 @@ public class OtaHtmlGeneratorTest
           "http://apple-ota.wdf.sap.corp:1080/ota-service/HTML?" +
                 "title=MyApp&bundleIdentifier=com.sap.myApp.XYZ&bundleVersion=3.4.5.6&" +
                 "ipaClassifier=ipaClassifier&otaClassifier=otaClassifier",
-          OtaHtmlGenerator.generateHtmlServiceUrl(url, null, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
-                ipaClassifier, otaClassifier).toExternalForm());
+          OtaHtmlGenerator.generateHtmlServiceUrl(url,
+                buildMap(KEY_TITLE, "MyApp", KEY_BUNDLE_IDENTIFIER, "com.sap.myApp.XYZ", KEY_BUNDLE_VERSION, "3.4.5.6",
+                      KEY_IPA_CLASSIFIER, ipaClassifier, KEY_OTA_CLASSIFIER, otaClassifier)).toExternalForm());
     assertEquals(
           "http://apple-ota.wdf.sap.corp:1080/ota-service/HTML?" +
                 "title=MyApp+With+Special%24_Char%26&bundleIdentifier=com.sap.myApp.XYZ&bundleVersion=3.4.5.6&" +
                 "ipaClassifier=ipaClassifier&otaClassifier=otaClassifier",
-          OtaHtmlGenerator.generateHtmlServiceUrl(url, null, "MyApp With Special$_Char&", "com.sap.myApp.XYZ", "3.4.5.6",
-                ipaClassifier, otaClassifier)
-            .toExternalForm());
+          OtaHtmlGenerator.generateHtmlServiceUrl(url,
+                buildMap(KEY_TITLE, "MyApp With Special$_Char&", KEY_BUNDLE_IDENTIFIER, "com.sap.myApp.XYZ", KEY_BUNDLE_VERSION,
+                      "3.4.5.6", KEY_IPA_CLASSIFIER, ipaClassifier, KEY_OTA_CLASSIFIER, otaClassifier)).toExternalForm());
     assertEquals(
           "http://apple-ota.wdf.sap.corp:1080/ota-service/HTML?" +
                 "title=MyApp&bundleIdentifier=com.sap.myApp.XYZ&bundleVersion=3.4.5.6",
-          OtaHtmlGenerator.generateHtmlServiceUrl(url, null, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
-                null, null).toExternalForm());
+          OtaHtmlGenerator.generateHtmlServiceUrl(url,
+                buildMap(KEY_TITLE, "MyApp", KEY_BUNDLE_IDENTIFIER, "com.sap.myApp.XYZ", KEY_BUNDLE_VERSION, "3.4.5.6"))
+            .toExternalForm());
     assertEquals(
           "http://apple-ota.wdf.sap.corp:1080/ota-service/HTML?" +
                 "title=MyApp&bundleIdentifier=com.sap.myApp.XYZ&bundleVersion=3.4.5.6&otaClassifier=otaClassifier",
-          OtaHtmlGenerator.generateHtmlServiceUrl(url, null, "MyApp", "com.sap.myApp.XYZ", "3.4.5.6",
-                null, otaClassifier).toExternalForm());
+          OtaHtmlGenerator.generateHtmlServiceUrl(url,
+                buildMap(KEY_TITLE, "MyApp", KEY_BUNDLE_IDENTIFIER, "com.sap.myApp.XYZ", KEY_BUNDLE_VERSION, "3.4.5.6",
+                      KEY_OTA_CLASSIFIER, otaClassifier)).toExternalForm());
   }
-  
+
   public void getNewInstanceCorrectResource() throws FileNotFoundException
   {
     assertEquals(OtaHtmlGenerator.DEFAULT_TEMPLATE,
@@ -144,7 +159,7 @@ public class OtaHtmlGeneratorTest
   @Test
   public void getNewInstanceEmpty() throws FileNotFoundException
   {
-    assertEquals(OtaHtmlGenerator.DEFAULT_TEMPLATE, 
+    assertEquals(OtaHtmlGenerator.DEFAULT_TEMPLATE,
           OtaHtmlGenerator.getInstance("").template.getName());
   }
 
@@ -158,8 +173,10 @@ public class OtaHtmlGeneratorTest
   @Test
   public void getNewInstanceCorrectFile() throws FileNotFoundException
   {
-    assertEquals("alternativeTemplate.html",
-          OtaHtmlGenerator.getInstance(new File("./src/test/resources/alternativeTemplate.html").getAbsolutePath()).template.getName());
+    assertEquals(
+          "alternativeTemplate.html",
+          OtaHtmlGenerator.getInstance(new File("./src/test/resources/alternativeTemplate.html").getAbsolutePath()).template
+            .getName());
   }
 
   @Test(expected = ResourceNotFoundException.class)
@@ -168,5 +185,5 @@ public class OtaHtmlGeneratorTest
     assertEquals(OtaHtmlGenerator.DEFAULT_TEMPLATE,
           OtaHtmlGenerator.getInstance(new File("./doesnotexist.htm").getAbsolutePath()).template.getName());
   }
-  
+
 }

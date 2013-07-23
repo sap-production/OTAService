@@ -19,17 +19,19 @@
  */
 package com.sap.prd.mobile.ios.ota.webapp;
 
-import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.BUNDLE_IDENTIFIER;
-import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.BUNDLE_VERSION;
-import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.IPA_CLASSIFIER;
-import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.OTA_CLASSIFIER;
-import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.TITLE;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_ACTION;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_QRCODE;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
+import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.generateHtmlServiceUrl;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_OFF_COLOR;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_OFF_COLOR_DEFAULT;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_ON_COLOR;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_ON_COLOR_DEFAULT;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getMatrixToImageConfig;
+import static com.sap.prd.mobile.ios.ota.webapp.Utils.getParametersAndReferer;
+import static com.sap.prd.mobile.ios.ota.webapp.Utils.getRequestParams;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
+import static java.lang.String.format;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 import java.awt.Dimension;
@@ -39,6 +41,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,8 +60,6 @@ public class OtaHtmlService extends HttpServlet
 
   public final static String SERVICE_NAME = "HTML"; //todo: dynamic
 
-  public final static String ACTION = "action";
-
   private final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
   public final static String HTML_TEMPLATE_PATH_KEY = "htmlTemplatePath";
 
@@ -75,77 +76,46 @@ public class OtaHtmlService extends HttpServlet
 
     try {
 
-      String originalReferer = Utils.getRefererSendError(request, response);
-      //String referer = removeFilePartFromURL(originalReferer);
+      Map<String, String> params = getParametersAndReferer(request, response, true);
 
-      final String action = request.getParameter(ACTION);
-      if (action != null && action.equals("qrcode")) {
+      final String action = params.get(KEY_ACTION);
+      if (action != null && action.equals(KEY_QRCODE)) {
 
-        URL htmlServiceUrl = OtaHtmlGenerator.generateHtmlServiceUrl(
-              getHtmlServiceUrl(request),
-              originalReferer,
-              request.getParameter(TITLE),
-              request.getParameter(BUNDLE_IDENTIFIER),
-              request.getParameter(BUNDLE_VERSION),
-              request.getParameter(IPA_CLASSIFIER),
-              request.getParameter(OTA_CLASSIFIER)
-          );
+        URL htmlServiceUrl = generateHtmlServiceUrl(getHtmlServiceUrl(request), params);
 
-        LOG.info(String.format(
-              "GET request from '%s' with referer '%s', action:qrcode and parameters '%s', '%s', '%s', '%s', '%s'",
-              request.getRemoteAddr(), originalReferer, request.getParameter(TITLE),
-              request.getParameter(BUNDLE_IDENTIFIER), request.getParameter(BUNDLE_VERSION),
-              request.getParameter(IPA_CLASSIFIER), request.getParameter(OTA_CLASSIFIER)));
+        LOG.info(format("GET request from '%s' with referer '%s', action:qrcode and parameters %s",
+              request.getRemoteAddr(), params.get(KEY_REFERER), params));
 
         LOG.info("Sending QRCode for " + htmlServiceUrl.toString());
-        sendQRCode(request, response, htmlServiceUrl.toString(), getMatrixToImageConfig(request), new Dimension(400, 400));
+
+        sendQRCode(request, response, htmlServiceUrl.toString(), getMatrixToImageConfig(request),
+              new Dimension(400, 400));
 
       }
       else {
 
-        URL plistUrl = OtaPlistGenerator.generatePlistRequestUrl(
-              getPlistServiceUrl(request),
-              originalReferer,
-              request.getParameter(TITLE),
-              request.getParameter(BUNDLE_IDENTIFIER),
-              request.getParameter(BUNDLE_VERSION),
-              request.getParameter(IPA_CLASSIFIER),
-              request.getParameter(OTA_CLASSIFIER)
-          );
+        URL plistUrl = OtaPlistGenerator.generatePlistRequestUrl(getPlistServiceUrl(request), params);
 
-        URL htmlServiceQrcodeUrl = OtaHtmlGenerator.generateHtmlServiceUrl(
-              getHtmlServiceUrl(request),
-              originalReferer,
-              request.getParameter(TITLE),
-              request.getParameter(BUNDLE_IDENTIFIER),
-              request.getParameter(BUNDLE_VERSION),
-              request.getParameter(IPA_CLASSIFIER),
-              request.getParameter(OTA_CLASSIFIER)
-          );
+        URL htmlServiceQrcodeUrl = generateHtmlServiceUrl(getHtmlServiceUrl(request), params);
         htmlServiceQrcodeUrl = new URL(htmlServiceQrcodeUrl.toExternalForm() + "&" +
-              ACTION + "=qrcode&" +
+              KEY_ACTION + "=" + KEY_QRCODE + "&" +
               QR_ON_COLOR + "=" + QR_ON_COLOR_DEFAULT + "&" +
               QR_OFF_COLOR + "=" + QR_OFF_COLOR_DEFAULT);
 
-        LOG.info(String.format("GET request from '%s' with referer '%s' and parameters '%s', '%s', '%s', '%s', '%s'",
-              request.getRemoteAddr(), originalReferer, request.getParameter(TITLE), request
-                .getParameter(BUNDLE_IDENTIFIER), request.getParameter(BUNDLE_VERSION),
-              request.getParameter(IPA_CLASSIFIER), request.getParameter(OTA_CLASSIFIER)));
+        LOG.info(format("GET request from '%s' with referer '%s' and parameters %s",
+              request.getRemoteAddr(), params.get(KEY_REFERER), params));
 
         HashMap<String, String> initParameters = getInitParameters();
         String htmlTemplatePath = initParameters.get(HTML_TEMPLATE_PATH_KEY);
-        final boolean DEBUG = initParameters.get("debug") != null && initParameters.get("debug").equalsIgnoreCase("true");
+        final boolean DEBUG = initParameters.get("debug") != null
+              && initParameters.get("debug").equalsIgnoreCase("true");
 
         response.setContentType("text/html");
         PrintWriter writer = response.getWriter();
         try {
           OtaHtmlGenerator generator = OtaHtmlGenerator.getInstance(htmlTemplatePath, DEBUG);
           LOG.info("Using HTML Template: " + generator.getTemplateName() + " (configured: " + htmlTemplatePath + ")");
-          generator.generate(
-                writer,
-                new Parameters(originalReferer, request.getParameter(TITLE), request.getParameter(BUNDLE_IDENTIFIER),
-                      plistUrl, htmlServiceQrcodeUrl, request.getParameter(IPA_CLASSIFIER),
-                      request.getParameter(OTA_CLASSIFIER), initParameters));
+          generator.generate(writer, new Parameters(plistUrl, htmlServiceQrcodeUrl, params, initParameters));
           writer.flush();
         }
         finally {
@@ -155,8 +125,8 @@ public class OtaHtmlService extends HttpServlet
 
     }
     catch (Exception e) {
-      LOG.log(Level.SEVERE, String.format(
-            "Exception while processing GET request from '%s' (%s)", request.getRemoteAddr(), Utils.getRequestParams(request)), e);
+      LOG.log(Level.SEVERE, format("Exception while processing GET request from '%s' (%s)",
+            request.getRemoteAddr(), getRequestParams(request)), e);
     }
   }
 

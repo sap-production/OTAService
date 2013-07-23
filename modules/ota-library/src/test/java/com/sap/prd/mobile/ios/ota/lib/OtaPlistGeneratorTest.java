@@ -19,6 +19,8 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
+import static com.sap.prd.mobile.ios.ota.lib.Constants.*;
+import static com.sap.prd.mobile.ios.ota.lib.LibUtils.buildMap;
 import static com.sap.prd.mobile.ios.ota.lib.TestUtils.assertContains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -59,25 +61,29 @@ public class OtaPlistGeneratorTest
   public void testCorrectValues() throws IOException
   {
     String generated = OtaPlistGenerator.getInstance().generate(
-          new Parameters(referer, title, bundleIdentifier, bundleVersion, null, null));
+          new Parameters(buildMap(KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier,
+                KEY_BUNDLE_VERSION, bundleVersion)));
     assertContains(STRING_TAG_START + title + STRING_TAG_END, generated);
     assertContains(STRING_TAG_START + bundleVersion + STRING_TAG_END, generated);
     assertContains(STRING_TAG_START + checkIpaURL + STRING_TAG_END, generated);
 
     generated = OtaPlistGenerator.getInstance().generate(
-          new Parameters(refererWithClassifier, title, bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier));
+          new Parameters(buildMap(KEY_REFERER, refererWithClassifier, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier,
+                KEY_BUNDLE_VERSION, bundleVersion, KEY_IPA_CLASSIFIER, ipaClassifier, KEY_OTA_CLASSIFIER, otaClassifier)));
     assertContains(STRING_TAG_START + title + STRING_TAG_END, generated);
     assertContains(STRING_TAG_START + bundleVersion + STRING_TAG_END, generated);
     assertContains(STRING_TAG_START + checkIpaURLWithClassifier + STRING_TAG_END, generated);
 
     generated = OtaPlistGenerator.getInstance().generate(
-          new Parameters(refererWithClassifier, title, bundleIdentifier, bundleVersion, null, otaClassifier));
+          new Parameters(buildMap(KEY_REFERER, refererWithClassifier, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier,
+                KEY_BUNDLE_VERSION, bundleVersion, KEY_OTA_CLASSIFIER, otaClassifier)));
     assertContains(STRING_TAG_START + title + STRING_TAG_END, generated);
     assertContains(STRING_TAG_START + bundleVersion + STRING_TAG_END, generated);
     assertContains(STRING_TAG_START + checkIpaURL + STRING_TAG_END, generated);
 
     generated = OtaPlistGenerator.getInstance().generate(
-          new Parameters(referer, title, bundleIdentifier, bundleVersion, ipaClassifier, null));
+          new Parameters(buildMap(KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier,
+                KEY_BUNDLE_VERSION, bundleVersion, KEY_IPA_CLASSIFIER, ipaClassifier)));
     assertContains(STRING_TAG_START + title + STRING_TAG_END, generated);
     assertContains(STRING_TAG_START + bundleVersion + STRING_TAG_END, generated);
     assertContains(STRING_TAG_START + checkIpaURLWithClassifier + STRING_TAG_END, generated);
@@ -89,12 +95,14 @@ public class OtaPlistGeneratorTest
   {
     //No classifier in referer
     String generated = OtaPlistGenerator.getInstance().generate(
-          new Parameters(referer, title, bundleIdentifier, bundleVersion, ipaClassifier, otaClassifier));
+          new Parameters(buildMap(KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier,
+                KEY_BUNDLE_VERSION, bundleVersion, KEY_IPA_CLASSIFIER, ipaClassifier, KEY_OTA_CLASSIFIER, otaClassifier)));
     assertContains(STRING_TAG_START + checkIpaURL + STRING_TAG_END, generated);
 
     //No classifier specified for ota
     generated = OtaPlistGenerator.getInstance().generate(
-          new Parameters(refererWithClassifier, title, bundleIdentifier, bundleVersion, ipaClassifier, null));
+          new Parameters(buildMap(KEY_REFERER, refererWithClassifier, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier,
+                KEY_BUNDLE_VERSION, bundleVersion, KEY_IPA_CLASSIFIER, ipaClassifier)));
     assertContains(STRING_TAG_START + "http://hostname:8080/path/MyApp-" + otaClassifier + "-" + ipaClassifier + ".ipa"
           + STRING_TAG_END, generated);
   }
@@ -102,8 +110,9 @@ public class OtaPlistGeneratorTest
   @Test
   public void testGenerateURL() throws IOException
   {
-    URL url = OtaPlistGenerator.generatePlistRequestUrl(long_service, long_referer, long_title, long_identifier,
-          long_version, ipaClassifier, otaClassifier);
+    URL url = OtaPlistGenerator.generatePlistRequestUrl(long_service,
+          buildMap(KEY_REFERER, long_referer, KEY_TITLE, long_title, KEY_BUNDLE_IDENTIFIER, long_identifier,
+                KEY_BUNDLE_VERSION, long_version, KEY_IPA_CLASSIFIER, ipaClassifier, KEY_OTA_CLASSIFIER, otaClassifier));
     assertEquals(10, StringUtils.countMatches(url.toExternalForm(), "/"));
     System.out.println("Length: " + url.toExternalForm().length() + " - " + url.toExternalForm());
     assertTrue(url.toExternalForm().startsWith(long_service));
@@ -114,12 +123,14 @@ public class OtaPlistGeneratorTest
     assertContains("/" + LibUtils.encode("ipaClassifier=" + ipaClassifier), url.toExternalForm());
     assertContains("/" + LibUtils.encode("otaClassifier=" + otaClassifier), url.toExternalForm());
 
-    url = OtaPlistGenerator.generatePlistRequestUrl(long_service, long_referer, long_title, long_identifier,
-          long_version, null, null);
+    url = OtaPlistGenerator.generatePlistRequestUrl(long_service,
+          buildMap(KEY_REFERER, long_referer, KEY_TITLE, long_title, KEY_BUNDLE_IDENTIFIER, long_identifier,
+                KEY_BUNDLE_VERSION, long_version));
     assertEquals(8, StringUtils.countMatches(url.toExternalForm(), "/"));
 
-    url = OtaPlistGenerator.generatePlistRequestUrl(long_service, long_referer, long_title, long_identifier,
-          long_version, null, otaClassifier);
+    url = OtaPlistGenerator.generatePlistRequestUrl(long_service,
+          buildMap(KEY_REFERER, long_referer, KEY_TITLE, long_title, KEY_BUNDLE_IDENTIFIER, long_identifier,
+                KEY_BUNDLE_VERSION, long_version, KEY_OTA_CLASSIFIER, otaClassifier));
     assertEquals(9, StringUtils.countMatches(url.toExternalForm(), "/"));
 
   }

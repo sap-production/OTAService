@@ -24,6 +24,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.sonatype.plexus.components.cipher.Base64;
@@ -77,7 +79,7 @@ public class LibUtils
       return new URL(ipaUrl);
     }
     else {
-      throw new MalformedURLException("Referer does not end with a file (e.g. .htm): "+referer);
+      throw new MalformedURLException("Referer does not end with a file (e.g. .htm): " + referer);
     }
   }
 
@@ -154,6 +156,22 @@ public class LibUtils
     catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e); //should never happen
     }
+  }
+
+  /**
+   * Builds a map of key/value pairs.
+   * @param keyValuePairs array containing the key value pairs in the way {key, value, key, value, ...}
+   * @return
+   */
+  public static Map<String, String> buildMap(String... keyValuePairs)
+  {
+    if (keyValuePairs.length % 2 != 0)
+      throw new IllegalArgumentException("keyValuePairs array not dividable by 2 (key + value)");
+    Map<String, String> map = new HashMap<String, String>();
+    for (int i = 0; i < keyValuePairs.length; i += 2) {
+      map.put(keyValuePairs[i], keyValuePairs[i + 1]);
+    }
+    return map;
   }
 
 }

@@ -19,6 +19,14 @@
  */
 package com.sap.prd.mobile.ios.ota.lib;
 
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_IDENTIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_VERSION;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_HTML_SERVICE_URL;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_HTML_URL;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_IPA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_OTA_CLASSIFIER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -35,14 +43,6 @@ import com.sap.prd.mobile.ios.ota.lib.OtaBuildHtmlGenerator.Parameters;
  */
 public class OtaBuildHtmlGenerator extends VelocityBase<Parameters>
 {
-
-  public final static String HTML_URL = "htmlUrl";
-  public static final String HTML_SERVICE_URL = "htmlServiceUrl";
-  public static final String TITLE = "title";
-  public static final String BUNDLE_IDENTIFIER = "bundleIdentifier";
-  public static final String BUNDLE_VERSION = "bundleVersion";
-  public static final String IPA_CLASSIFIER = "ipaClassifier";
-  public static final String OTA_CLASSIFIER = "otaClassifier";
 
   /**
    * Parameters required for the <code>OtaBuildHtmlGenerator</code>.
@@ -72,15 +72,16 @@ public class OtaBuildHtmlGenerator extends VelocityBase<Parameters>
           throws MalformedURLException
     {
       super();
-      URL htmlUrl = OtaHtmlGenerator.generateHtmlServiceUrl(htmlServiceUrl, null, title, bundleIdentifier, bundleVersion,
-            ipaClassifier, otaClassifier);
-      mappings.put(HTML_URL, htmlUrl.toExternalForm());
-      mappings.put(HTML_SERVICE_URL, htmlServiceUrl);
-      mappings.put(TITLE, title);
-      mappings.put(BUNDLE_IDENTIFIER, bundleIdentifier);
-      mappings.put(BUNDLE_VERSION, bundleVersion);
-      mappings.put(IPA_CLASSIFIER, ipaClassifier);
-      mappings.put(OTA_CLASSIFIER, otaClassifier);
+      Map<String, String> params = new HashMap<String, String>();
+      params.put(KEY_TITLE, title);
+      params.put(KEY_BUNDLE_IDENTIFIER, bundleIdentifier);
+      params.put(KEY_BUNDLE_VERSION, bundleVersion);
+      params.put(KEY_IPA_CLASSIFIER, ipaClassifier);
+      params.put(KEY_OTA_CLASSIFIER, otaClassifier);
+      URL htmlUrl = OtaHtmlGenerator.generateHtmlServiceUrl(htmlServiceUrl, params);
+      mappings.putAll(params);
+      mappings.put(KEY_HTML_URL, htmlUrl.toExternalForm());
+      mappings.put(KEY_HTML_SERVICE_URL, htmlServiceUrl);
       if(initParams != null) {
         for(String name : initParams.keySet()) {
           mappings.put(name, initParams.get(name));

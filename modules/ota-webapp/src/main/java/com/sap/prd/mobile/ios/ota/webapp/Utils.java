@@ -19,6 +19,7 @@
  */
 package com.sap.prd.mobile.ios.ota.webapp;
 
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.decode;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -29,6 +30,7 @@ import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -77,9 +79,9 @@ public class Utils
   public static String getReferer(HttpServletRequest request)
         throws IOException
   {
-    String referer = request.getParameter("Referer");
+    String referer = request.getParameter(KEY_REFERER);
     if (referer == null) {
-      referer = request.getHeader("Referer");
+      referer = request.getHeader(KEY_REFERER);
     }
     else {
       if (!referer.contains("://")) {
@@ -118,6 +120,19 @@ public class Utils
     return referer;
   }
 
+  public static Map<String, String> getParametersAndReferer(HttpServletRequest request, HttpServletResponse response, boolean exceptionIfRefererMissing) throws IOException, ServletException
+  {
+    Map<String, String> params = new HashMap<String, String>();
+    String referer = exceptionIfRefererMissing ? getRefererSendError(request, response) : getReferer(request);
+    Map<String, String[]> requestParams = request.getParameterMap();
+    for(String key : requestParams.keySet()) {
+      String[] values = requestParams.get(key);
+      if(values.length==1) params.put(key, values[0]);
+    }
+    params.put(KEY_REFERER, referer);
+    return params;
+  }
+  
   public static String urlEncode(String string)
   {
     if (string == null) {
