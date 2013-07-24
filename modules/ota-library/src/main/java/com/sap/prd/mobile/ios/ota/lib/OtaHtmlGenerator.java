@@ -77,11 +77,10 @@ public class OtaHtmlGenerator extends VelocityBase<Parameters>
       if (initParams != null) {
         mappings.putAll(initParams);
       }
+      mappings.putAll(requestParams);
       mappings.put(Constants.KEY_IPA_URL, ipaUrl.toExternalForm());
-      mappings.put(KEY_BUNDLE_IDENTIFIER, requestParams.get(KEY_BUNDLE_IDENTIFIER));
       mappings.put(KEY_PLIST_URL, plistUrl.toExternalForm());
       mappings.put(KEY_HTML_QRCODE_URL, htmlServiceQrcodeUrl == null ? null : htmlServiceQrcodeUrl.toExternalForm());
-      mappings.put(KEY_TITLE, requestParams.get(KEY_TITLE));
     }
   }
 

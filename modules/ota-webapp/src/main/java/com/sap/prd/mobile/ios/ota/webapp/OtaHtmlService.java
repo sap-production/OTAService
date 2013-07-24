@@ -96,11 +96,7 @@ public class OtaHtmlService extends HttpServlet
 
         URL plistUrl = OtaPlistGenerator.generatePlistRequestUrl(getPlistServiceUrl(request), params);
 
-        URL htmlServiceQrcodeUrl = generateHtmlServiceUrl(getHtmlServiceUrl(request), params);
-        htmlServiceQrcodeUrl = new URL(htmlServiceQrcodeUrl.toExternalForm() + "&" +
-              KEY_ACTION + "=" + KEY_QRCODE + "&" +
-              QR_ON_COLOR + "=" + QR_ON_COLOR_DEFAULT + "&" +
-              QR_OFF_COLOR + "=" + QR_OFF_COLOR_DEFAULT);
+        URL htmlServiceQrcodeUrl = generateHtmlServiceQRCodeUrl(getHtmlServiceUrl(request), params);
 
         LOG.info(format("GET request from '%s' with referer '%s' and parameters %s",
               request.getRemoteAddr(), params.get(KEY_REFERER), params));
@@ -154,6 +150,14 @@ public class OtaHtmlService extends HttpServlet
   static URL getHtmlServiceUrl(HttpServletRequest request) throws MalformedURLException
   {
     return new URL(getServiceUrl(request, OtaHtmlService.SERVICE_NAME));
+  }
+  
+  private URL generateHtmlServiceQRCodeUrl(URL htmlServiceUrl, Map<String, String> params) throws MalformedURLException
+  {
+    return new URL(htmlServiceUrl.toExternalForm() + "&" +
+          KEY_ACTION + "=" + KEY_QRCODE + "&" +
+          QR_ON_COLOR + "=" + QR_ON_COLOR_DEFAULT + "&" +
+          QR_OFF_COLOR + "=" + QR_OFF_COLOR_DEFAULT);
   }
 
   private static String getServiceUrl(HttpServletRequest request, String serviceName)
