@@ -17,5 +17,7 @@ public class Constants
   public final static String KEY_ITMS_REDIRECT = "itmsRedirect";
   public final static String KEY_HTML_URL = "htmlUrl";
   public static final String KEY_HTML_SERVICE_URL = "htmlServiceUrl";
+  public static final String KEY_REMOVE_OUTER_FRAME = "removeOuterFrame";
+  public static final String KEY_DEBUG = "debug";
   
 }

@@ -29,7 +29,7 @@ import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_QRCODE;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.generatePlistRequestUrl;
-import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlService.getPlistServiceUrl;
+import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlService.getPlistServiceBaseUrl;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.extractParametersFromUri;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getMatrixToImageConfig;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getParametersAndReferer;
@@ -49,6 +49,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator;
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.Parameters;
@@ -86,23 +88,23 @@ public class OtaPlistService extends HttpServlet
             request.getRemoteAddr(), params.get(KEY_REFERER), params));
 
       final String action = params.get(KEY_ACTION);
-      if (action != null && action.equals(KEY_QRCODE)) {
+      if (StringUtils.equals(action, KEY_QRCODE)) {
 
         LOG.info(String.format("GET request from '%s' with referer '%s', action:qrcode" +
               "and parameters %s", request.getRemoteAddr(), params.get(KEY_REFERER), params));
 
-        String plistUrl = generatePlistRequestUrl(getPlistServiceUrl(request), params).toExternalForm();
+        String plistUrl = generatePlistRequestUrl(getPlistServiceBaseUrl(request), params).toExternalForm();
         String data = plistUrl + "?action=itmsRedirect";
         LOG.info("Sending QRCode for " + data);
         sendQRCode(request, response, data, getMatrixToImageConfig(request), new Dimension(400, 400));
 
       }
-      else if (action != null && action.equals(KEY_ITMS_REDIRECT)) {
+      else if (StringUtils.equals(action, KEY_ITMS_REDIRECT)) {
 
         LOG.info(String.format("GET request from '%s' with referer '%s', action:itmsRedirect" +
               "and parameters %s", request.getRemoteAddr(), params.get(KEY_REFERER), params));
 
-        URL plistUrl = generatePlistRequestUrl(getPlistServiceUrl(request), params);
+        URL plistUrl = generatePlistRequestUrl(getPlistServiceBaseUrl(request), params);
 
         String itmsServiceLink = "itms-services:///?action=download-manifest&url=" + plistUrl.toExternalForm();
         LOG.info("Sending ItmsServiceRedirect for " + itmsServiceLink);

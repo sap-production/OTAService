@@ -22,6 +22,7 @@ package com.sap.prd.mobile.ios.ota.webapp;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_ACTION;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_QRCODE;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REMOVE_OUTER_FRAME;
 import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.generateHtmlServiceUrl;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_OFF_COLOR;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_OFF_COLOR_DEFAULT;
@@ -33,6 +34,7 @@ import static com.sap.prd.mobile.ios.ota.webapp.Utils.getRequestParams;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
 import static java.lang.String.format;
 import static org.apache.commons.io.IOUtils.closeQuietly;
+import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -50,6 +52,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+
+import com.sap.prd.mobile.ios.ota.lib.Constants;
 import com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator;
 import com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.Parameters;
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator;
@@ -79,9 +84,11 @@ public class OtaHtmlService extends HttpServlet
       Map<String, String> params = getParametersAndReferer(request, response, true);
 
       final String action = params.get(KEY_ACTION);
-      if (action != null && action.equals(KEY_QRCODE)) {
+      if (StringUtils.equals(action, KEY_QRCODE)) {
 
-        URL htmlServiceUrl = generateHtmlServiceUrl(getHtmlServiceUrl(request), params);
+        URL htmlServiceUrl = equalsIgnoreCase(params.get(KEY_REMOVE_OUTER_FRAME), "true") ?
+              generateHtmlServiceUrl(getHtmlServiceBaseUrl(request), params) :
+              new URL(params.get(KEY_REFERER));
 
         LOG.info(format("GET request from '%s' with referer '%s', action:qrcode and parameters %s",
               request.getRemoteAddr(), params.get(KEY_REFERER), params));
@@ -94,17 +101,16 @@ public class OtaHtmlService extends HttpServlet
       }
       else {
 
-        URL plistUrl = OtaPlistGenerator.generatePlistRequestUrl(getPlistServiceUrl(request), params);
+        URL plistUrl = OtaPlistGenerator.generatePlistRequestUrl(getPlistServiceBaseUrl(request), params);
 
-        URL htmlServiceQrcodeUrl = generateHtmlServiceQRCodeUrl(getHtmlServiceUrl(request), params);
+        URL htmlServiceQrcodeUrl = generateHtmlServiceQRCodeUrl(request, params);
 
         LOG.info(format("GET request from '%s' with referer '%s' and parameters %s",
               request.getRemoteAddr(), params.get(KEY_REFERER), params));
 
         HashMap<String, String> initParameters = getInitParameters();
         String htmlTemplatePath = initParameters.get(HTML_TEMPLATE_PATH_KEY);
-        final boolean DEBUG = initParameters.get("debug") != null
-              && initParameters.get("debug").equalsIgnoreCase("true");
+        final boolean DEBUG = equalsIgnoreCase(initParameters.get(Constants.KEY_DEBUG), "true");
 
         response.setContentType("text/html");
         PrintWriter writer = response.getWriter();
@@ -142,18 +148,20 @@ public class OtaHtmlService extends HttpServlet
     return map;
   }
 
-  static String getPlistServiceUrl(HttpServletRequest request)
+  static String getPlistServiceBaseUrl(HttpServletRequest request)
   {
     return getServiceUrl(request, OtaPlistService.SERVICE_NAME);
   }
 
-  static URL getHtmlServiceUrl(HttpServletRequest request) throws MalformedURLException
+  static URL getHtmlServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
   {
     return new URL(getServiceUrl(request, OtaHtmlService.SERVICE_NAME));
   }
-  
-  private URL generateHtmlServiceQRCodeUrl(URL htmlServiceUrl, Map<String, String> params) throws MalformedURLException
+
+  private URL generateHtmlServiceQRCodeUrl(HttpServletRequest request, Map<String, String> params)
+        throws MalformedURLException
   {
+    URL htmlServiceUrl = generateHtmlServiceUrl(getHtmlServiceBaseUrl(request), params);
     return new URL(htmlServiceUrl.toExternalForm() + "&" +
           KEY_ACTION + "=" + KEY_QRCODE + "&" +
           QR_ON_COLOR + "=" + QR_ON_COLOR_DEFAULT + "&" +
