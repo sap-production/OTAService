@@ -37,3 +37,7 @@ You can use the following properties in your HTML (Velocity) template:
 * $plistUrl: The URL to the PLIST Service. The itms-services link for OTA deployment should use this URL.<br>
   E.g. &lt;a href='itms-services:///?action=download-manifest&url=$plistUrl'&gt;Install Over-the-air&lt;/a&gt;
 * $&lt;yourCustomParameter&gt;: Any other custom parameters defined in the ota-service.xml can be used as well
+
+### License ###
+
+This project is copyrighted by [SAP AG](http://www.sap.com/) and made available under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html). Please also confer to the text files "LICENSE" and "NOTICE" included with the project sources.
