@@ -63,14 +63,8 @@ public class OtaBuildHtmlGeneratorTest
     assertContains(
           "<iframe id=\"iframe\" src=\""
                 + HTML_SERVICE
-                + "?title=MyApp&bundleIdentifier=com.sap.xyz.MyApp&bundleVersion=1.0.2&ipaClassifier=ipaClassifier&otaClassifier=otaClassifier\"",
+                + "?title=MyApp&bundleIdentifier=com.sap.xyz.MyApp&bundleVersion=1.0.2&ipaClassifier=ipaClassifier&otaClassifier=otaClassifier",
           generated);
-    assertContains("<form action=\"" + HTML_SERVICE + "\"", generated);
-    assertContains("<input type=\"hidden\" name=\"title\" value=\"MyApp\">", generated);
-    assertContains("<input type=\"hidden\" name=\"bundleIdentifier\" value=\"com.sap.xyz.MyApp\">", generated);
-    assertContains("<input type=\"hidden\" name=\"bundleVersion\" value=\"1.0.2\">", generated);
-    assertContains("<input type=\"hidden\" name=\"ipaClassifier\" value=\"ipaClassifier\">", generated);
-    assertContains("<input type=\"hidden\" name=\"otaClassifier\" value=\"otaClassifier\">", generated);
   }
 
   @Test

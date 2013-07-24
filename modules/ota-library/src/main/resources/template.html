@@ -22,17 +22,20 @@
     <title>Over The Air Deployment</title>
 
 		<script type="text/javascript">
-		  //REMOVING IFRAME
-		  try {
-		    //Exception when accessing outer frame parent location from different domain
-		    var parentHref = parent.location.href;
-		    //No Exception, either frame removed already or using OTA Service in same domain
-			if(parentHref != document.location.href) {
-			  parent.location.href = document.location.href;
-			}
-		  } catch (e) {
-		    //Get rid of iFrame, reload window with iFrame page
-			parent.location.href = document.location.href;
+		  var removeOuterFrame = "$removeOuterFrame";
+		  if(removeOuterFrame == "true") {
+			  //REMOVING IFRAME
+			  try {
+			    //Exception when accessing outer frame parent location from different domain
+			    var parentHref = parent.location.href;
+			    //No Exception, either frame removed already or using OTA Service in same domain
+				if(parentHref != document.location.href) {
+				  parent.location.href = document.location.href;
+				}
+			  } catch (e) {
+			    //Get rid of iFrame, reload window with iFrame page
+				parent.location.href = document.location.href;
+			  }
 		  }
 		</script>
 

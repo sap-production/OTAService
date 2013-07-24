@@ -97,25 +97,12 @@
 		
 </head>
 <body>
-<iframe id="iframe" src="$htmlUrl" width="700px" height="450px" marginheight="0" marginwidth="0" frameborder="0">
-<b>Click below to open OTA Installer Page</b>
-    <form action="$htmlServiceUrl" method="POST">
-        <input type="hidden" name="title" value="$title">
-        <input type="hidden" name="bundleIdentifier" value="$bundleIdentifier">
-        <input type="hidden" name="bundleVersion" value="$bundleVersion">
-        <input type="hidden" name="ipaClassifier" value="$ipaClassifier">
-        <input type="hidden" name="otaClassifier" value="$otaClassifier">
-        <input type="hidden" id="formReferer" name="Referer" value="">
-        <input type="submit">   
-    </form>
-</iframe>
+<iframe id="iframe" src="$htmlUrl&removeOuterFrame=true" width="700px" height="450px" marginheight="0" marginwidth="0" frameborder="0"></iframe>
 
 <script language="javascript" type="text/javascript">
 	var thisUrl = document.location;
 	var iframe = document.getElementById("iframe");
 	iframe.src=iframe.src+"&Referer="+encodeURIComponent(thisUrl);
-	var formReferer = document.getElementById("formReferer");
-	formReferer.value=encodeURIComponent(thisUrl);
 </script> 
 
 </body>
