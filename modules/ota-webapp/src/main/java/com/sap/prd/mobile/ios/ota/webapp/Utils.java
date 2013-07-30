@@ -21,7 +21,6 @@ package com.sap.prd.mobile.ios.ota.webapp;
 
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.decode;
-import static org.apache.commons.io.IOUtils.closeQuietly;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -42,31 +41,12 @@ import org.sonatype.plexus.components.cipher.Base64;
 
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageConfig;
-import com.sap.prd.mobile.ios.ota.lib.LibUtils;
 
 public class Utils
 {
 
   private static final String US_ASCII = "US-ASCII";
   private static final String UTF_8 = "UTF-8";
-
-  /**
-   * Removes the file part of a URL if it has one
-   * 
-   * @param url
-   */
-  public static String removeFilePartFromURL(String url)
-  {
-    int idxDot = url.lastIndexOf('.');
-    int idxSlash = url.lastIndexOf('/');
-    if (idxDot < 0 || idxSlash < 0) {
-      return url;
-    }
-    if (idxDot > idxSlash) {
-      return url.substring(0, idxSlash);
-    }
-    return url;
-  }
 
   /**
    * Returns the referer from parameter 'Referer' or from header parameter 'Referer'. The request
@@ -87,9 +67,9 @@ public class Utils
       if (!referer.contains("://")) {
         referer = decode(referer);
         int idx = referer.indexOf("://");
-        if(idx < 0) throw new IOException(":// still not contained after decoding Referer");
+        if (idx < 0) throw new IOException(":// still not contained after decoding Referer");
         idx = referer.lastIndexOf("=", idx);
-        if(idx >= 0) referer = referer.substring(idx+1);
+        if (idx >= 0) referer = referer.substring(idx + 1);
       }
     }
     return referer;
@@ -120,19 +100,20 @@ public class Utils
     return referer;
   }
 
-  public static Map<String, String> getParametersAndReferer(HttpServletRequest request, HttpServletResponse response, boolean exceptionIfRefererMissing) throws IOException, ServletException
+  public static Map<String, String> getParametersAndReferer(HttpServletRequest request, HttpServletResponse response,
+        boolean exceptionIfRefererMissing) throws IOException, ServletException
   {
     Map<String, String> params = new HashMap<String, String>();
     String referer = exceptionIfRefererMissing ? getRefererSendError(request, response) : getReferer(request);
     Map<String, String[]> requestParams = request.getParameterMap();
-    for(String key : requestParams.keySet()) {
+    for (String key : requestParams.keySet()) {
       String[] values = requestParams.get(key);
-      if(values.length==1) params.put(key, values[0]);
+      if (values.length == 1) params.put(key, values[0]);
     }
     params.put(KEY_REFERER, referer);
     return params;
   }
-  
+
   public static String urlEncode(String string)
   {
     if (string == null) {
@@ -172,8 +153,8 @@ public class Utils
    * <li>First the serviceName element is identified. Only elements after it are parsed.
    * <li>The single elements are split at '/'
    * <li>Each element is URLDecoded
-   * <li>Each element is split into key and value at '=' and put into a String[2].<br>
-   * If no '=' is contained the element is put into a String[1].
+   * <li>Each element is split into key and value at '=' and put into the result map.<br>
+   * If no '=' is contained the value of the key is null.
    * </ol>
    * Here some examples: <br>
    * <table border='1'>
@@ -217,7 +198,7 @@ public class Utils
    * @return <code>String</code> array containing <code>String[1]</code> and <code>String[2]</code>
    *         elements
    */
-  public static String[][] extractParametersFromUri(HttpServletRequest request, String serviceName)
+  public static Map<String, String> extractSlashedParametersFromUri(HttpServletRequest request, String serviceName)
   {
     if (request.getRequestURI() == null) {
       return null;
@@ -227,20 +208,14 @@ public class Utils
     if (paramsIdx >= 0) uri = uri.substring(paramsIdx);
 
     String[] requestURI = uri.split("/");
-    String[][] result = null;
-    boolean startFound = false;
-    int readIdx = 0, writeIdx = 0;
+    Map<String, String> result = null;
     for (String element : requestURI) {
-      readIdx++;
-      if (startFound) {
-        String decoded = LibUtils.decode(element);
-        result[writeIdx++] = parseKeyValuePair(decoded);
+      if (result != null) {
+        String[] keyValue = parseKeyValuePair(decode(element));
+        result.put(keyValue[0], keyValue.length > 1 ? keyValue[1] : null);
       }
       else {
-        if (element.equals(serviceName)) {
-          startFound = true;
-          result = new String[requestURI.length - readIdx][2];
-        }
+        if (element.equals(serviceName)) result = new HashMap<String, String>();
       }
     }
     return result;
@@ -267,28 +242,6 @@ public class Utils
     }
   }
 
-  /**
-   * Searches in the map for an element having the specified key assigned and returns the value.
-   * 
-   * @param map
-   * @param key
-   * @return
-   */
-  public static String getValueFromUriParameterMap(String[][] map, String key)
-  {
-    if (map == null || key == null) {
-      return null;
-    }
-    for (String[] element : map) {
-      if (element.length == 2) {
-        if (element[0] != null && key.equals(element[0])) {
-          return element[1];
-        }
-      }
-    }
-    return null;
-  }
-
   public static void sendQRCode(HttpServletRequest request, HttpServletResponse response, String contents)
         throws IOException, WriterException, URISyntaxException
   {
@@ -300,13 +253,8 @@ public class Utils
   {
     response.setContentType("image/png");
     ServletOutputStream os = response.getOutputStream();
-    try {
-      QREncoder.encode(contents, os, config, dimension);
-      os.flush();
-    }
-    finally {
-      closeQuietly(os);
-    }
+    QREncoder.encode(contents, os, config, dimension);
+    os.flush();
   }
 
   public final static String QR_ON_COLOR = "qrOnColor";
@@ -332,17 +280,17 @@ public class Utils
   public static boolean isIDevice(HttpServletRequest request) throws UnknownInformationException
   {
     String agent = request.getHeader("user-agent");
-    if(agent == null) throw new UnknownInformationException("user-agent not specified in header");
+    if (agent == null) throw new UnknownInformationException("user-agent not specified in header");
     return agent.contains("iPhone") || agent.contains("iPad");
   }
 
   public static boolean isMobile(HttpServletRequest request) throws UnknownInformationException
   {
     String agent = request.getHeader("user-agent");
-    if(agent == null) throw new UnknownInformationException("user-agent not specified in header");
-    if(agent.contains("Mobile")) return true;
-    if(agent.contains("iPhone") || agent.contains("iPad")) return true;
-    if(agent.contains("Android")) return true;
+    if (agent == null) throw new UnknownInformationException("user-agent not specified in header");
+    if (agent.contains("Mobile")) return true;
+    if (agent.contains("iPhone") || agent.contains("iPad")) return true;
+    if (agent.contains("Android")) return true;
     //TODO: ...
     return false;
   }
@@ -352,15 +300,15 @@ public class Utils
     return !isMobile(request);
   }
 
-  
   @SuppressWarnings("serial")
-  static class UnknownInformationException extends RuntimeException {
+  static class UnknownInformationException extends RuntimeException
+  {
     public UnknownInformationException(String string)
     {
       super(string);
     }
   }
-  
+
   public static String getRequestParams(HttpServletRequest request)
   {
     StringBuilder sb = new StringBuilder();
@@ -368,9 +316,9 @@ public class Utils
     sb.append(", REQUEST PARAMETERS:{");
     Map<String, String[]> params = request.getParameterMap();
     boolean first = true;
-    for(Object key : params.keySet()) {
+    for (Object key : params.keySet()) {
       String[] values = params.get(key);
-      if(!first) sb.append(", ");
+      if (!first) sb.append(", ");
       sb.append(key).append("=").append(Arrays.toString(values));
       first = false;
     }
@@ -378,5 +326,4 @@ public class Utils
     return sb.toString();
   }
 
-  
 }

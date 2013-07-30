@@ -22,29 +22,21 @@ package com.sap.prd.mobile.ios.ota.webapp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Test;
 
 import com.sap.prd.mobile.ios.ota.lib.LibUtils;
-import com.sap.prd.mobile.ios.ota.webapp.Utils;
 
 public class UtilsTest
 {
-
-  @Test
-  public void testRemoveFilePartFromURL()
-  {
-    assertEquals("", Utils.removeFilePartFromURL(""));
-    assertEquals("http://test:1234/Service", Utils.removeFilePartFromURL("http://test:1234/Service/file.htm"));
-    assertEquals("http://test:1234/Service/abc", Utils.removeFilePartFromURL("http://test:1234/Service/abc"));
-    assertEquals("http://test:1234/Service/abc/", Utils.removeFilePartFromURL("http://test:1234/Service/abc/"));
-    assertEquals("http://test:1234/Service.txt/abc", Utils.removeFilePartFromURL("http://test:1234/Service.txt/abc"));
-    assertEquals("http://test:1234/Ser", Utils.removeFilePartFromURL("http://test:1234/Ser/file.php?x=y"));
-  }
 
   @Test
   public void testParseKeyValuePair() {
@@ -123,19 +115,22 @@ public class UtilsTest
   {
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getRequestURI()).thenReturn(uri);
-    String[][] result = Utils.extractParametersFromUri(request, serviceName);
+    Map<String, String> result = Utils.extractSlashedParametersFromUri(request, serviceName);
     if (expectedNr < 0) {
       assertNull(result);
       return;
     }
-    assertEquals(expectedNr, result.length);
-    assertEquals(expected.length, result.length);
+    assertEquals(expectedNr, result.size());
+    assertEquals(expected.length, result.size());
     for (int i = 0; i < expectedNr; i++) {
-      String[] resultElement = result[i];
       String[] expectedElement = expected[i];
-      assertEquals(expectedElement.length, resultElement.length);
-      for (int j = 0; j < expectedElement.length; j++) {
-        assertEquals(expectedElement[j], resultElement[j]);
+      assertTrue(result.containsKey(expectedElement[0]));
+      if(expectedElement.length == 1) {
+        assertNull(result.get(expectedElement[0]));
+      } else if(expectedElement.length == 2) {
+        assertEquals(expectedElement[1], result.get(expectedElement[0]));
+      } else {
+        fail("Illegal number of expected elements: "+expectedElement.length);
       }
     }
   }

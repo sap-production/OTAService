@@ -29,13 +29,10 @@ import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_QRCODE;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.generatePlistRequestUrl;
-import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlService.getPlistServiceBaseUrl;
-import static com.sap.prd.mobile.ios.ota.webapp.Utils.extractParametersFromUri;
+import static com.sap.prd.mobile.ios.ota.webapp.Utils.extractSlashedParametersFromUri;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getMatrixToImageConfig;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getParametersAndReferer;
-import static com.sap.prd.mobile.ios.ota.webapp.Utils.getValueFromUriParameterMap;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
-import static org.apache.commons.io.IOUtils.closeQuietly;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -61,7 +58,7 @@ public class OtaPlistService extends HttpServlet
 
   private final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
 
-  public final static String SERVICE_NAME = "PLIST"; //todo: dynamic
+  public final static String SERVICE_NAME = "PLIST"; //TODO: get dynamic from web.xml servlet-mapping
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
@@ -70,14 +67,14 @@ public class OtaPlistService extends HttpServlet
     try {
       Map<String, String> params = getParametersAndReferer(request, response, false);
 
-      String[][] extractedParametersFromUri = extractParametersFromUri(request, SERVICE_NAME);
-      dubParameters(KEY_REFERER, params, extractedParametersFromUri, false);
-      dubParameters(KEY_TITLE, params, extractedParametersFromUri, true);
-      dubParameters(KEY_BUNDLE_IDENTIFIER, params, extractedParametersFromUri, true);
-      dubParameters(KEY_BUNDLE_VERSION, params, extractedParametersFromUri, true);
-      dubParameters(KEY_IPA_CLASSIFIER, params, extractedParametersFromUri, true);
-      dubParameters(KEY_OTA_CLASSIFIER, params, extractedParametersFromUri, true);
-      dubParameters(KEY_ACTION, params, extractedParametersFromUri, true);
+      Map<String, String> slashedParams = extractSlashedParametersFromUri(request, SERVICE_NAME);
+      dubParameters(KEY_REFERER, params, slashedParams, false);
+      dubParameters(KEY_TITLE, params, slashedParams, true);
+      dubParameters(KEY_BUNDLE_IDENTIFIER, params, slashedParams, true);
+      dubParameters(KEY_BUNDLE_VERSION, params, slashedParams, true);
+      dubParameters(KEY_IPA_CLASSIFIER, params, slashedParams, true);
+      dubParameters(KEY_OTA_CLASSIFIER, params, slashedParams, true);
+      dubParameters(KEY_ACTION, params, slashedParams, true);
 
       if (params.get(KEY_REFERER) == null) {
         response.sendError(400, "Referer required");
@@ -115,14 +112,8 @@ public class OtaPlistService extends HttpServlet
 
         response.setContentType("application/xml");
         PrintWriter writer = response.getWriter();
-        try {
-          OtaPlistGenerator.getInstance().generate(writer, new Parameters(params));
-          writer.flush();
-        }
-        finally {
-          closeQuietly(writer);
-        }
-
+        OtaPlistGenerator.getInstance().generate(writer, new Parameters(params));
+        writer.flush();
       }
 
     }
@@ -135,6 +126,15 @@ public class OtaPlistService extends HttpServlet
     }
   }
 
+  public static String getPlistServiceBaseUrl(HttpServletRequest request)
+  {
+    String serviceUrl = request.getRequestURL().toString();
+    int lastSlash = serviceUrl.lastIndexOf("/");
+    serviceUrl = serviceUrl.substring(0, lastSlash);
+    String plistServiceUrl = serviceUrl + "/" + OtaPlistService.SERVICE_NAME;
+    return plistServiceUrl;
+  }
+
   /**
    * Updates the requestParams Map for the specified KEY if needed.<br/>
    * requestParams and extractedUriParams might contain values for the specified key.<br/>
@@ -145,19 +145,20 @@ public class OtaPlistService extends HttpServlet
    * 
    * @param KEY
    * @param requestParams
-   * @param extractedUriParams
+   * @param extractParametersFromUri
    * @param requestParamLeading
    */
-  private void dubParameters(final String KEY, Map<String, String> requestParams, String[][] extractedUriParams,
+  private void dubParameters(final String KEY, Map<String, String> requestParams,
+        Map<String, String> slashSeparatedParams,
         boolean requestParamLeading)
   {
-    final String uriValue = getValueFromUriParameterMap(extractedUriParams, KEY);
-    final String reqValue = requestParams.get(KEY);
+    final String slashValue = slashSeparatedParams == null ? null : slashSeparatedParams.get(KEY);
+    final String reqValue = requestParams == null ? null : requestParams.get(KEY);
     if (requestParamLeading) {
-      if (reqValue == null) requestParams.put(KEY, uriValue);
+      if (reqValue == null) requestParams.put(KEY, slashValue);
     }
     else {
-      if (uriValue != null) requestParams.put(KEY, uriValue);
+      if (slashValue != null) requestParams.put(KEY, slashValue);
     }
   }
 
