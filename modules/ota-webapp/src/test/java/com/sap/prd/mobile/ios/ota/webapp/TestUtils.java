@@ -20,6 +20,15 @@
 package com.sap.prd.mobile.ios.ota.webapp;
 
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletRegistration;
+import javax.servlet.http.HttpServletRequest;
 
 public class TestUtils
 {
@@ -31,4 +40,23 @@ public class TestUtils
     }
   }
 
+  public static void mockServletContextUrlMappings(HttpServletRequest request)
+  {
+    ServletContext mockedServletContext = mock(ServletContext.class);
+
+    ServletRegistration mockedPlistServletRegistration = mock(ServletRegistration.class);
+    Collection<String> plistList = new ArrayList<String>();
+    plistList.add("/PLIST/*");
+    when(mockedPlistServletRegistration.getMappings()).thenReturn(plistList);
+    
+    ServletRegistration mockedHtmlServletRegistration = mock(ServletRegistration.class);
+    Collection<String> htmlList = new ArrayList<String>();
+    htmlList.add("/HTML/*");
+    when(mockedHtmlServletRegistration.getMappings()).thenReturn(htmlList);
+    
+    when(mockedServletContext.getServletRegistration("otaPlistService")).thenReturn(mockedPlistServletRegistration);
+    when(mockedServletContext.getServletRegistration("otaHtmlService")).thenReturn(mockedHtmlServletRegistration);
+    when(request.getServletContext()).thenReturn(mockedServletContext);
+  }
+  
 }

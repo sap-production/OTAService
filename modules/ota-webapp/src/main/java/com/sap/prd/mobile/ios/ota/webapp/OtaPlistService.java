@@ -29,7 +29,7 @@ import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_QRCODE;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.generatePlistRequestUrl;
-import static com.sap.prd.mobile.ios.ota.webapp.Utils.extractSlashedParametersFromUri;
+import static com.sap.prd.mobile.ios.ota.webapp.Utils.extractSlashedEncodedParametersFromUri;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getMatrixToImageConfig;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getParametersAndReferer;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
@@ -37,6 +37,7 @@ import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import java.util.logging.Level;
@@ -58,8 +59,6 @@ public class OtaPlistService extends HttpServlet
 
   private final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
 
-  public final static String SERVICE_NAME = "PLIST"; //TODO: get dynamic from web.xml servlet-mapping
-
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
   {
@@ -67,7 +66,7 @@ public class OtaPlistService extends HttpServlet
     try {
       Map<String, String> params = getParametersAndReferer(request, response, false);
 
-      Map<String, String> slashedParams = extractSlashedParametersFromUri(request, SERVICE_NAME);
+      Map<String, String> slashedParams = extractSlashedEncodedParametersFromUri(request, getPlistServletMappingUrlPattern(request));
       dubParameters(KEY_REFERER, params, slashedParams, false);
       dubParameters(KEY_TITLE, params, slashedParams, true);
       dubParameters(KEY_BUNDLE_IDENTIFIER, params, slashedParams, true);
@@ -126,13 +125,14 @@ public class OtaPlistService extends HttpServlet
     }
   }
 
-  public static String getPlistServiceBaseUrl(HttpServletRequest request)
+  public static URL getPlistServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
   {
-    String serviceUrl = request.getRequestURL().toString();
-    int lastSlash = serviceUrl.lastIndexOf("/");
-    serviceUrl = serviceUrl.substring(0, lastSlash);
-    String plistServiceUrl = serviceUrl + "/" + OtaPlistService.SERVICE_NAME;
-    return plistServiceUrl;
+    return Utils.getServiceBaseUrl(request, "otaPlistService");
+  }
+
+  public static String getPlistServletMappingUrlPattern(HttpServletRequest request)
+  {
+    return Utils.getServletMappingUrlPattern(request, "otaPlistService");
   }
 
   /**

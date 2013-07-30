@@ -21,11 +21,15 @@ package com.sap.prd.mobile.ios.ota.webapp;
 
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.decode;
+import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.awt.Dimension;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -34,6 +38,7 @@ import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRegistration;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -193,30 +198,30 @@ public class Utils
    * 
    * @param request
    *          The request containing the requestURI
-   * @param serviceName
+   * @param serviceUrlPattern
    *          The name of the service in the URI
    * @return <code>String</code> array containing <code>String[1]</code> and <code>String[2]</code>
    *         elements
    */
-  public static Map<String, String> extractSlashedParametersFromUri(HttpServletRequest request, String serviceName)
+  public static Map<String, String> extractSlashedEncodedParametersFromUri(HttpServletRequest request, String serviceUrlPattern)
   {
-    if (request.getRequestURI() == null) {
-      return null;
-    }
+    Map<String, String> result = new HashMap<String, String>();
     String uri = request.getRequestURI();
-    int paramsIdx = uri.lastIndexOf("?");
-    if (paramsIdx >= 0) uri = uri.substring(paramsIdx);
 
-    String[] requestURI = uri.split("/");
-    Map<String, String> result = null;
-    for (String element : requestURI) {
-      if (result != null) {
-        String[] keyValue = parseKeyValuePair(decode(element));
-        result.put(keyValue[0], keyValue.length > 1 ? keyValue[1] : null);
-      }
-      else {
-        if (element.equals(serviceName)) result = new HashMap<String, String>();
-      }
+    if (!uri.startsWith(request.getContextPath())) throw new IllegalStateException(
+          format("URI '%s' does not start with context path '%s'", uri, request.getContextPath()));
+    uri = uri.substring(request.getContextPath().length()); // e.g. "/ota-service"
+
+    if (!uri.startsWith(serviceUrlPattern)) throw new IllegalStateException(
+          format("URI '%s' does not start with serviceUrlPattern '%s'", uri, serviceUrlPattern));
+    uri = uri.substring(serviceUrlPattern.length()); // e.g. "/PLIST"
+
+    if (uri.startsWith("/")) uri = uri.substring("/".length());
+
+    String[] elements = uri.split("/");
+    for (String element : elements) {
+      String[] keyValue = parseKeyValuePair(decode(element));
+      result.put(keyValue[0], keyValue.length > 1 ? keyValue[1] : null);
     }
     return result;
   }
@@ -324,6 +329,34 @@ public class Utils
     }
     sb.append("}");
     return sb.toString();
+  }
+
+  public static String getServletMappingUrlPattern(HttpServletRequest request, String servletName)
+  {
+    ServletRegistration servletRegistration = request.getServletContext().getServletRegistration(servletName);
+    String firstMapping = servletRegistration.getMappings().iterator().next();
+    if (firstMapping.endsWith("/*")) firstMapping = firstMapping.substring(0, firstMapping.length() - "/*".length());
+    return firstMapping;
+  }
+
+  public static URL getServiceBaseUrl(HttpServletRequest request, String servletName) throws MalformedURLException
+  {
+    String requestUrl = request.getRequestURL().toString(); //e.g. "http://host:8765/ota-service/HTML/UmVmZXJlcj1odHRw..."
+    String contextPath = request.getContextPath().toString(); //e.g. "/ota-service" or "" if root context
+    String serviceUrlPattern = getServletMappingUrlPattern(request, servletName); //e.g. "/PLIST"
+
+    String result;
+    if(!isEmpty(contextPath)) {
+      int idx = requestUrl.indexOf(contextPath);
+      if (idx < 0) throw new IllegalStateException(format("Cannot find '%s' in '%s'", contextPath, requestUrl));
+      result = requestUrl.substring(0, idx + contextPath.length()); //e.g. "http://host:8765/ota-service"
+    } else {
+      int idx = requestUrl.indexOf("//");
+      idx = requestUrl.indexOf("/", idx+"//".length());
+      result = requestUrl.substring(0, idx); //e.g. "http://host:8765"
+    }
+    result += serviceUrlPattern; //e.g. "http://host:8765/ota-service/PLIST"
+    return new URL(result);
   }
 
 }

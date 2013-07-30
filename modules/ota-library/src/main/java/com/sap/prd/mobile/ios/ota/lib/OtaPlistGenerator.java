@@ -125,7 +125,7 @@ public class OtaPlistGenerator extends VelocityBase<Parameters>
    * @return the URL
    * @throws IOException
    */
-  public static URL generatePlistRequestUrl(String plistServiceUrl, Map<String, String> params) throws IOException
+  public static URL generatePlistRequestUrl(URL plistServiceUrl, Map<String, String> params) throws IOException
   {
     if (plistServiceUrl == null) {
       throw new NullPointerException("serviceUrl null");

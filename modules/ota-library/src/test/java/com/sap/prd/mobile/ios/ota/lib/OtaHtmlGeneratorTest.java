@@ -67,7 +67,7 @@ public class OtaHtmlGeneratorTest
   @Test
   public void testCorrectValues() throws IOException
   {
-    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, paramMap);
+    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(new URL(plistServiceUrl), paramMap);
     String generated = OtaHtmlGenerator.getInstance().generate(
           new Parameters(plistURL, null, buildMap(KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier),
                 initParams));
@@ -85,7 +85,7 @@ public class OtaHtmlGeneratorTest
   @Test
   public void testAlternativeTemplateByResource() throws IOException
   {
-    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, paramMap);
+    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(new URL(plistServiceUrl), paramMap);
     String generated = OtaHtmlGenerator.getInstance("alternativeTemplate.html").generate(
           new Parameters(plistURL, null, buildMap(KEY_REFERER, referer, KEY_TITLE, title, KEY_BUNDLE_IDENTIFIER, bundleIdentifier),
                 initParams));
@@ -95,7 +95,7 @@ public class OtaHtmlGeneratorTest
   @Test
   public void testAlternativeTemplateByFile() throws IOException
   {
-    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(plistServiceUrl, paramMap);
+    URL plistURL = OtaPlistGenerator.generatePlistRequestUrl(new URL(plistServiceUrl), paramMap);
     File templateFile = new File("./src/test/resources/alternativeTemplate.html");
     assertTrue("File does not exist at " + templateFile.getAbsolutePath(), templateFile.isFile());
     String generated = OtaHtmlGenerator.getInstance(templateFile.getAbsolutePath()).generate(

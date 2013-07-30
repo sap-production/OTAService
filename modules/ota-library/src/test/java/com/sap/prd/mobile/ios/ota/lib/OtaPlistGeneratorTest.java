@@ -21,7 +21,7 @@ package com.sap.prd.mobile.ios.ota.lib;
 
 import static com.sap.prd.mobile.ios.ota.lib.Constants.*;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.buildMap;
-import static com.sap.prd.mobile.ios.ota.lib.TestUtils.assertContains;
+import static com.sap.prd.mobile.ios.ota.lib.TestUtils.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -110,7 +110,7 @@ public class OtaPlistGeneratorTest
   @Test
   public void testGenerateURL() throws IOException
   {
-    URL url = OtaPlistGenerator.generatePlistRequestUrl(long_service,
+    URL url = OtaPlistGenerator.generatePlistRequestUrl(new URL(long_service),
           buildMap(KEY_REFERER, long_referer, KEY_TITLE, long_title, KEY_BUNDLE_IDENTIFIER, long_identifier,
                 KEY_BUNDLE_VERSION, long_version, KEY_IPA_CLASSIFIER, ipaClassifier, KEY_OTA_CLASSIFIER, otaClassifier));
     assertEquals(10, StringUtils.countMatches(url.toExternalForm(), "/"));
@@ -123,12 +123,12 @@ public class OtaPlistGeneratorTest
     assertContains("/" + LibUtils.encode("ipaClassifier=" + ipaClassifier), url.toExternalForm());
     assertContains("/" + LibUtils.encode("otaClassifier=" + otaClassifier), url.toExternalForm());
 
-    url = OtaPlistGenerator.generatePlistRequestUrl(long_service,
+    url = OtaPlistGenerator.generatePlistRequestUrl(new URL(long_service),
           buildMap(KEY_REFERER, long_referer, KEY_TITLE, long_title, KEY_BUNDLE_IDENTIFIER, long_identifier,
                 KEY_BUNDLE_VERSION, long_version));
     assertEquals(8, StringUtils.countMatches(url.toExternalForm(), "/"));
 
-    url = OtaPlistGenerator.generatePlistRequestUrl(long_service,
+    url = OtaPlistGenerator.generatePlistRequestUrl(new URL(long_service),
           buildMap(KEY_REFERER, long_referer, KEY_TITLE, long_title, KEY_BUNDLE_IDENTIFIER, long_identifier,
                 KEY_BUNDLE_VERSION, long_version, KEY_OTA_CLASSIFIER, otaClassifier));
     assertEquals(9, StringUtils.countMatches(url.toExternalForm(), "/"));

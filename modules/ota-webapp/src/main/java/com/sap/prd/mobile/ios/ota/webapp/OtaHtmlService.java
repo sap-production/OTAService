@@ -140,9 +140,9 @@ public class OtaHtmlService extends HttpServlet
     return map;
   }
 
-  static URL getHtmlServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
+  public static URL getHtmlServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
   {
-    return new URL(request.getRequestURL().toString());
+    return Utils.getServiceBaseUrl(request, "otaHtmlService");
   }
 
   private URL generateHtmlServiceQRCodeUrl(HttpServletRequest request, Map<String, String> params)

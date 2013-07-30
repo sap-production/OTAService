@@ -39,7 +39,8 @@ public class UtilsTest
 {
 
   @Test
-  public void testParseKeyValuePair() {
+  public void testParseKeyValuePair()
+  {
     testParseKeyValuePairCheck(null, true, 0);
     testParseKeyValuePairCheck("", false, 1, "");
     testParseKeyValuePairCheck("xyz", false, 1, "xyz");
@@ -67,57 +68,69 @@ public class UtilsTest
   }
 
   @Test
-  public void testExtractParametersFromUri()
+  public void testExtractParametersFromUri_onlyKeys()
   {
-    testExtractParametersFromUriCheck(
+    testExtractSlashedEncodedParametersFromUriCheck(
           "/blabla/SERVICE/" + LibUtils.encode("abc") + "/" + LibUtils.encode("def") + "/"
                 + LibUtils.encode("xyz"),
-          "SERVICE",
+          "/SERVICE",
           3,
           new String[] { "abc" },
           new String[] { "def" },
           new String[] { "xyz" });
-//    testExtractParametersFromUriCheck(
-//          "/blabla/SERVICE/abc/def%3Dqwe/xyz",
-//          "SERVICE",
-//          3,
-//          new String[] { "abc" },
-//          new String[] { "def", "qwe" },
-//          new String[] { "xyz" });
-    testExtractParametersFromUriCheck(
+  }
+
+  @Test
+  public void testExtractParametersFromUri_KeysAndValues()
+  {
+    testExtractSlashedEncodedParametersFromUriCheck(
           "/blabla/SERVICE/" + LibUtils.encode("abc") + "/" + LibUtils.encode("def=qwe") + "/"
                 + LibUtils.encode("xyz"),
-          "SERVICE",
+          "/SERVICE",
           3,
           new String[] { "abc" },
           new String[] { "def", "qwe" },
           new String[] { "xyz" });
-    testExtractParametersFromUriCheck(
+  }
+
+  @Test
+  public void testExtractParametersFromUri_OneKey()
+  {
+    testExtractSlashedEncodedParametersFromUriCheck(
           "/blabla/SERVICE/" + LibUtils.encode("abc") + "/",
-          "SERVICE",
+          "/SERVICE",
           1,
           new String[] { "abc" });
-    testExtractParametersFromUriCheck(
+  }
+
+  @Test(expected=IllegalStateException.class)
+  public void testExtractParametersFromUri_NoService()
+  {
+    testExtractSlashedEncodedParametersFromUriCheck(
           "/blabla/noservice/" + LibUtils.encode("abc") + "/",
-          "SERVICE",
-          -1); //null
-    testExtractParametersFromUriCheck(
-          null,
-          "SERVICE",
-          -1); //null
-    testExtractParametersFromUriCheck(
-          "",
-          "SERVICE",
+          "/SERVICE",
           -1); //null
   }
 
-  private void testExtractParametersFromUriCheck(String uri, String serviceName, int expectedNr, String[]... expected)
+  @Test(expected=IllegalStateException.class)
+  public void testExtractParametersFromUri_Nothing()
+  {
+    testExtractSlashedEncodedParametersFromUriCheck(
+          "",
+          "/SERVICE",
+          -1); //null
+  }
+
+  private void testExtractSlashedEncodedParametersFromUriCheck(String uri, String serviceName, int expectedNr, String[]... expected)
   {
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getRequestURI()).thenReturn(uri);
-    Map<String, String> result = Utils.extractSlashedParametersFromUri(request, serviceName);
+    when(request.getContextPath()).thenReturn("/blabla");
+
+    Map<String, String> result = Utils.extractSlashedEncodedParametersFromUri(request, serviceName);
     if (expectedNr < 0) {
-      assertNull(result);
+      assertNotNull(result);
+      assertEquals(0, result.size());
       return;
     }
     assertEquals(expectedNr, result.size());
@@ -125,12 +138,14 @@ public class UtilsTest
     for (int i = 0; i < expectedNr; i++) {
       String[] expectedElement = expected[i];
       assertTrue(result.containsKey(expectedElement[0]));
-      if(expectedElement.length == 1) {
+      if (expectedElement.length == 1) {
         assertNull(result.get(expectedElement[0]));
-      } else if(expectedElement.length == 2) {
+      }
+      else if (expectedElement.length == 2) {
         assertEquals(expectedElement[1], result.get(expectedElement[0]));
-      } else {
-        fail("Illegal number of expected elements: "+expectedElement.length);
+      }
+      else {
+        fail("Illegal number of expected elements: " + expectedElement.length);
       }
     }
   }

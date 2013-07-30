@@ -30,6 +30,7 @@ import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlServiceTest.TEST_IPA_LINK
 import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlServiceTest.TEST_REFERER;
 import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlServiceTest.TEST_TITLE;
 import static com.sap.prd.mobile.ios.ota.webapp.TestUtils.assertContains;
+import static com.sap.prd.mobile.ios.ota.webapp.TestUtils.mockServletContextUrlMappings;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -49,6 +50,7 @@ public class OtaPlistServiceTest
 {
   private final static String STRING_TAG_START = "<string>";
   private final static String STRING_TAG_END = "</string>";
+  private final static String PLIST = "PLIST";
 
   @Test
   public void testWithURLParameters() throws ServletException, IOException
@@ -57,6 +59,9 @@ public class OtaPlistServiceTest
     StringWriter writer = new StringWriter();
 
     HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getContextPath()).thenReturn("");
+    when(request.getRequestURI()).thenReturn("/PLIST");
+    mockServletContextUrlMappings(request);
 
     when(request.getParameter(KEY_REFERER)).thenReturn(TEST_REFERER);
     Map<String, String[]> map = new HashMap<String, String[]>();
@@ -87,13 +92,16 @@ public class OtaPlistServiceTest
     HttpServletRequest request = mock(HttpServletRequest.class);
 
     StringBuilder sb = new StringBuilder();
-    sb.append("/abc/").append(OtaPlistService.SERVICE_NAME).append("/");
+    sb.append("/abc/").append(PLIST).append("/");
     sb.append(encode(KEY_REFERER + "=" + TEST_REFERER)).append("/");
     sb.append(encode(KEY_TITLE + "=" + TEST_TITLE)).append("/");
     sb.append(encode(KEY_BUNDLE_IDENTIFIER + "=" + TEST_BUNDLEIDENTIFIER)).append("/");
     sb.append(encode(KEY_BUNDLE_VERSION + "=" + TEST_BUNDLEVERSION));
     when(request.getRequestURI()).thenReturn(sb.toString());
+    when(request.getContextPath()).thenReturn("/abc");
 
+    mockServletContextUrlMappings(request);
+    
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.getWriter()).thenReturn(new PrintWriter(writer));
 

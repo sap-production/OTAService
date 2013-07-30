@@ -26,8 +26,10 @@ import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_OTA_CLASSIFIER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.buildMap;
+import static com.sap.prd.mobile.ios.ota.lib.TestUtils.assertContains;
+import static com.sap.prd.mobile.ios.ota.lib.TestUtils.assertOtaLink;
 import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlService.HTML_TEMPLATE_PATH_KEY;
-import static com.sap.prd.mobile.ios.ota.webapp.TestUtils.assertContains;
+import static com.sap.prd.mobile.ios.ota.webapp.TestUtils.mockServletContextUrlMappings;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -55,12 +57,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator;
-import com.sap.prd.mobile.ios.ota.lib.TestUtils;
 
 public class OtaHtmlServiceTest
 {
 
   final static String TEST_SERVICE_URL = "http://ota-server:8080/HTML";
+  final static String TEST_CONTEXT_PATH = "";
 
   final static String TEST_REFERER = "http://nexus:8081/abc/MyHHH.htm";
   final static String TEST_IPA_LINK = "http://nexus:8081/abc/MyHHH.ipa";
@@ -84,13 +86,16 @@ public class OtaHtmlServiceTest
   @BeforeClass
   public static void beforeClass() throws IOException
   {
-    TEST_PLIST_URL = OtaPlistGenerator.generatePlistRequestUrl("http://ota-server:8080/PLIST",
+    TEST_PLIST_URL = OtaPlistGenerator.generatePlistRequestUrl(new URL("http://ota-server:8080/PLIST"),
           buildMap(KEY_REFERER, TEST_REFERER, KEY_TITLE, TEST_TITLE, KEY_BUNDLE_IDENTIFIER, TEST_BUNDLEIDENTIFIER,
                 KEY_BUNDLE_VERSION, TEST_BUNDLEVERSION));
     TEST_OTA_LINK = String.format("<a href='itms-services:///?action=download-manifest&url=%s'>", TEST_PLIST_URL);
-    TEST_PLIST_URL_WITH_CLASSIFIERS = OtaPlistGenerator.generatePlistRequestUrl("http://ota-server:8080/PLIST",
-          buildMap(KEY_REFERER, TEST_REFERER_WITH_CLASSIFIER, KEY_TITLE, TEST_TITLE, KEY_BUNDLE_IDENTIFIER, TEST_BUNDLEIDENTIFIER,
-                KEY_BUNDLE_VERSION, TEST_BUNDLEVERSION, KEY_IPA_CLASSIFIER, KEY_IPA_CLASSIFIER, KEY_OTA_CLASSIFIER, KEY_OTA_CLASSIFIER));
+    TEST_PLIST_URL_WITH_CLASSIFIERS = OtaPlistGenerator.generatePlistRequestUrl(
+          new URL("http://ota-server:8080/PLIST"),
+          buildMap(KEY_REFERER, TEST_REFERER_WITH_CLASSIFIER, KEY_TITLE, TEST_TITLE, KEY_BUNDLE_IDENTIFIER,
+                TEST_BUNDLEIDENTIFIER,
+                KEY_BUNDLE_VERSION, TEST_BUNDLEVERSION, KEY_IPA_CLASSIFIER, KEY_IPA_CLASSIFIER, KEY_OTA_CLASSIFIER,
+                KEY_OTA_CLASSIFIER));
   }
 
   @Before
@@ -113,7 +118,7 @@ public class OtaHtmlServiceTest
     String result = writer.getBuffer().toString();
     assertContains(CHECK_TITLE, result);
     assertContains(TEST_IPA_LINK, result);
-    TestUtils.assertOtaLink(result, TEST_PLIST_URL.toString(), TEST_BUNDLEIDENTIFIER);
+    assertOtaLink(result, TEST_PLIST_URL.toString(), TEST_BUNDLEIDENTIFIER);
     assertContains(TEST_PLIST_URL.toExternalForm(), result);
   }
 
@@ -171,11 +176,14 @@ public class OtaHtmlServiceTest
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getHeader(KEY_REFERER)).thenReturn(TEST_REFERER);
     when(request.getRequestURL()).thenReturn(new StringBuffer(TEST_SERVICE_URL));
+    when(request.getContextPath()).thenReturn(TEST_CONTEXT_PATH);
+
+    mockServletContextUrlMappings(request);
     
     Map<String, String[]> map = new HashMap<String, String[]>();
-    map.put(KEY_TITLE, new String[]{TEST_TITLE});
-    map.put(KEY_BUNDLE_IDENTIFIER, new String[]{TEST_BUNDLEIDENTIFIER});
-    map.put(KEY_BUNDLE_VERSION, new String[]{TEST_BUNDLEVERSION});
+    map.put(KEY_TITLE, new String[] { TEST_TITLE });
+    map.put(KEY_BUNDLE_IDENTIFIER, new String[] { TEST_BUNDLEIDENTIFIER });
+    map.put(KEY_BUNDLE_VERSION, new String[] { TEST_BUNDLEVERSION });
     when(request.getParameterMap()).thenReturn(map);
 
     return request;
@@ -190,14 +198,17 @@ public class OtaHtmlServiceTest
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getHeader(KEY_REFERER)).thenReturn(TEST_REFERER_WITH_CLASSIFIER);
     when(request.getRequestURL()).thenReturn(new StringBuffer(TEST_SERVICE_URL));
-    
+    when(request.getContextPath()).thenReturn("");
+
     Map<String, String[]> map = new HashMap<String, String[]>();
-    map.put(KEY_TITLE, new String[]{TEST_TITLE});
-    map.put(KEY_BUNDLE_IDENTIFIER, new String[]{TEST_BUNDLEIDENTIFIER});
-    map.put(KEY_BUNDLE_VERSION, new String[]{TEST_BUNDLEVERSION});
-    map.put(KEY_IPA_CLASSIFIER, new String[]{TEST_IPACLASSIFIER});
-    map.put(KEY_OTA_CLASSIFIER, new String[]{TEST_OTACLASSIFIER});
+    map.put(KEY_TITLE, new String[] { TEST_TITLE });
+    map.put(KEY_BUNDLE_IDENTIFIER, new String[] { TEST_BUNDLEIDENTIFIER });
+    map.put(KEY_BUNDLE_VERSION, new String[] { TEST_BUNDLEVERSION });
+    map.put(KEY_IPA_CLASSIFIER, new String[] { TEST_IPACLASSIFIER });
+    map.put(KEY_OTA_CLASSIFIER, new String[] { TEST_OTACLASSIFIER });
     when(request.getParameterMap()).thenReturn(map);
+
+    mockServletContextUrlMappings(request);
     
     HttpServletResponse response = mockResponse(writer);
 
@@ -206,7 +217,7 @@ public class OtaHtmlServiceTest
     String result = writer.getBuffer().toString();
     assertContains(CHECK_TITLE, result);
     assertContains(TEST_IPA_LINK_WITH_CLASSIFIER, result);
-    TestUtils.assertOtaLink(result, TEST_PLIST_URL_WITH_CLASSIFIERS.toString(), TEST_BUNDLEIDENTIFIER);
+    assertOtaLink(result, TEST_PLIST_URL_WITH_CLASSIFIERS.toString(), TEST_BUNDLEIDENTIFIER);
     assertContains(TEST_PLIST_URL_WITH_CLASSIFIERS.toExternalForm(), result);
   }
 
