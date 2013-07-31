@@ -24,6 +24,7 @@ import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_QRCODE;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REMOVE_OUTER_FRAME;
 import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.generateHtmlServiceUrl;
+import static com.sap.prd.mobile.ios.ota.webapp.OtaPlistService.getPlistServiceBaseUrl;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_OFF_COLOR;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_OFF_COLOR_DEFAULT;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_ON_COLOR;
@@ -65,7 +66,7 @@ public class OtaHtmlService extends HttpServlet
   private static final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
 
   public static final String HTML_SERVICE_SERVLET_NAME = "otaHtmlService";
-  
+
   public static final String HTML_TEMPLATE_PATH_KEY = "htmlTemplatePath";
 
   @Override
@@ -83,6 +84,9 @@ public class OtaHtmlService extends HttpServlet
 
       Map<String, String> params = getParametersAndReferer(request, response, true);
 
+      LOG.info(format("GET request from '%s' with referer '%s', action:qrcode and parameters %s",
+            request.getRemoteAddr(), params.get(KEY_REFERER), params));
+
       final String action = params.get(KEY_ACTION);
       if (StringUtils.equals(action, KEY_QRCODE)) {
 
@@ -90,23 +94,15 @@ public class OtaHtmlService extends HttpServlet
               generateHtmlServiceUrl(getHtmlServiceBaseUrl(request), params) :
               new URL(params.get(KEY_REFERER));
 
-        LOG.info(format("GET request from '%s' with referer '%s', action:qrcode and parameters %s",
-              request.getRemoteAddr(), params.get(KEY_REFERER), params));
-
-        LOG.info("Sending QRCode for " + htmlServiceUrl.toString());
-
+        LOG.fine("Sending QRCode for " + htmlServiceUrl.toString());
         sendQRCode(request, response, htmlServiceUrl.toString(), getMatrixToImageConfig(request),
               new Dimension(400, 400));
 
       }
       else {
 
-        URL plistUrl = OtaPlistGenerator.generatePlistRequestUrl(OtaPlistService.getPlistServiceBaseUrl(request), params);
-
+        URL plistUrl = OtaPlistGenerator.generatePlistRequestUrl(getPlistServiceBaseUrl(request), params);
         URL htmlServiceQrcodeUrl = generateHtmlServiceQRCodeUrl(request, params);
-
-        LOG.info(format("GET request from '%s' with referer '%s' and parameters %s",
-              request.getRemoteAddr(), params.get(KEY_REFERER), params));
 
         HashMap<String, String> initParameters = getInitParameters();
         String htmlTemplatePath = initParameters.get(HTML_TEMPLATE_PATH_KEY);
@@ -115,7 +111,7 @@ public class OtaHtmlService extends HttpServlet
         response.setContentType("text/html");
         PrintWriter writer = response.getWriter();
         OtaHtmlGenerator generator = OtaHtmlGenerator.getInstance(htmlTemplatePath, DEBUG);
-        LOG.info("Using HTML Template: " + generator.getTemplateName() + " (configured: " + htmlTemplatePath + ")");
+        LOG.finer("Using HTML Template: " + generator.getTemplateName() + " (configured: " + htmlTemplatePath + ")");
         generator.generate(writer, new Parameters(plistUrl, htmlServiceQrcodeUrl, params, initParameters));
         writer.flush();
       }

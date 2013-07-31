@@ -79,35 +79,29 @@ public class OtaPlistService extends HttpServlet
       dubParameters(KEY_OTA_CLASSIFIER, params, slashedParams, true);
       dubParameters(KEY_ACTION, params, slashedParams, true);
 
+      LOG.info(String.format("GET request from '%s' with referer '%s' and parameters %s",
+            request.getRemoteAddr(), params.get(KEY_REFERER), params));
+      
       if (params.get(KEY_REFERER) == null) {
         response.sendError(400, "Referer required");
         return;
       }
 
-      LOG.info(String.format("GET request from '%s' with referer '%s' and parameters %s",
-            request.getRemoteAddr(), params.get(KEY_REFERER), params));
-
       final String action = params.get(KEY_ACTION);
       if (StringUtils.equals(action, KEY_QRCODE)) {
 
-        LOG.info(String.format("GET request from '%s' with referer '%s', action:qrcode" +
-              "and parameters %s", request.getRemoteAddr(), params.get(KEY_REFERER), params));
-
         String plistUrl = generatePlistRequestUrl(getPlistServiceBaseUrl(request), params).toExternalForm();
         String data = plistUrl + "?action=itmsRedirect";
-        LOG.info("Sending QRCode for " + data);
+        LOG.fine("Sending QRCode for " + data);
         sendQRCode(request, response, data, getMatrixToImageConfig(request), new Dimension(400, 400));
 
       }
       else if (StringUtils.equals(action, KEY_ITMS_REDIRECT)) {
 
-        LOG.info(String.format("GET request from '%s' with referer '%s', action:itmsRedirect" +
-              "and parameters %s", request.getRemoteAddr(), params.get(KEY_REFERER), params));
-
         URL plistUrl = generatePlistRequestUrl(getPlistServiceBaseUrl(request), params);
 
         String itmsServiceLink = "itms-services:///?action=download-manifest&url=" + plistUrl.toExternalForm();
-        LOG.info("Sending ItmsServiceRedirect for " + itmsServiceLink);
+        LOG.fine("Sending ItmsServiceRedirect for " + itmsServiceLink);
         response.sendRedirect(itmsServiceLink);
 
       }
