@@ -58,7 +58,7 @@ import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.Parameters;
 public class OtaPlistService extends HttpServlet
 {
 
-  private final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
+  private static final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
 
   public static final String PLIST_SERVICE_SERVLET_NAME = "otaPlistService";
 

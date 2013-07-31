@@ -62,11 +62,11 @@ import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator;
 public class OtaHtmlService extends HttpServlet
 {
 
-  private final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
+  private static final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
 
   public static final String HTML_SERVICE_SERVLET_NAME = "otaHtmlService";
   
-  public final static String HTML_TEMPLATE_PATH_KEY = "htmlTemplatePath";
+  public static final String HTML_TEMPLATE_PATH_KEY = "htmlTemplatePath";
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException

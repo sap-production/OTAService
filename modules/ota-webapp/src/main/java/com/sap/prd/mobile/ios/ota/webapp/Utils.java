@@ -37,6 +37,7 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -51,6 +52,8 @@ import com.google.zxing.client.j2se.MatrixToImageConfig;
 
 public class Utils
 {
+  
+  private static final Logger LOG = Logger.getLogger(Utils.class.getSimpleName());
 
   private static final String US_ASCII = "US-ASCII";
   private static final String UTF_8 = "UTF-8";
@@ -205,7 +208,8 @@ public class Utils
    * @return <code>String</code> array containing <code>String[1]</code> and <code>String[2]</code>
    *         elements
    */
-  public static Map<String, String> extractSlashedEncodedParametersFromUri(HttpServletRequest request, String serviceUrlPattern)
+  public static Map<String, String> extractSlashedEncodedParametersFromUri(HttpServletRequest request,
+        String serviceUrlPattern)
   {
     Map<String, String> result = new HashMap<String, String>();
     String uri = request.getRequestURI();
@@ -279,43 +283,6 @@ public class Utils
     return new MatrixToImageConfig(on, off);
   }
 
-  //user-agent infos: E.g. http://html5-mobile.de/blog/wichtigsten-user-agents-mobile-devices-jquery-mobile    
-  // user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 5_1_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B206 Safari/7534.48.3
-  // user-agent=Mozilla/5.0 (iPad; CPU OS 6_1_3 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10B329 Safari/8536.25
-  // user-agent=Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)
-
-  public static boolean isIDevice(HttpServletRequest request) throws UnknownInformationException
-  {
-    String agent = request.getHeader("user-agent");
-    if (agent == null) throw new UnknownInformationException("user-agent not specified in header");
-    return agent.contains("iPhone") || agent.contains("iPad");
-  }
-
-  public static boolean isMobile(HttpServletRequest request) throws UnknownInformationException
-  {
-    String agent = request.getHeader("user-agent");
-    if (agent == null) throw new UnknownInformationException("user-agent not specified in header");
-    if (agent.contains("Mobile")) return true;
-    if (agent.contains("iPhone") || agent.contains("iPad")) return true;
-    if (agent.contains("Android")) return true;
-    //TODO: ...
-    return false;
-  }
-
-  public static boolean isDesktop(HttpServletRequest request) throws UnknownInformationException
-  {
-    return !isMobile(request);
-  }
-
-  @SuppressWarnings("serial")
-  static class UnknownInformationException extends RuntimeException
-  {
-    public UnknownInformationException(String string)
-    {
-      super(string);
-    }
-  }
-
   public static String getRequestInfosForLog(HttpServletRequest request)
   {
     StringBuilder sb = new StringBuilder();
@@ -333,9 +300,13 @@ public class Utils
     return sb.toString();
   }
 
+  private static boolean getServletMappingUrlPattern_workaroundUsageLogged = false;
+  
   /**
-   * Gets the <code>url-pattern</code> configured in the <code>servlet-mapping</code> for the specified <code>servletName</code>.<br/>
+   * Gets the <code>url-pattern</code> configured in the <code>servlet-mapping</code> for the
+   * specified <code>servletName</code>.<br/>
    * The trailing "/*" is removed.
+   * 
    * @param request
    * @param servletName
    * @return url-pattern without "/*"
@@ -347,21 +318,30 @@ public class Utils
       String firstMapping = servletRegistration.getMappings().iterator().next();
       if (firstMapping.endsWith("/*")) firstMapping = firstMapping.substring(0, firstMapping.length() - "/*".length());
       return firstMapping;
-      
-    } catch (NoSuchMethodError e) {
+
+    }
+    catch (NoSuchMethodError e) {
       //Workaround - Servlet 3.0 API required - not contained before Tomcat 7
-      if(servletName.equals(HTML_SERVICE_SERVLET_NAME)) {
+      if(!getServletMappingUrlPattern_workaroundUsageLogged) {
+        LOG.warning("Your Servlet engine does not yet support the Servlet 3.0 API required to read url-patterns from " +
+        		"servlet-mappings. Use Tomcat 7 or any other servlet engine supporting Servlet 3.0 if you experience issues. Missing method: "+e.getMessage());
+        getServletMappingUrlPattern_workaroundUsageLogged = true;
+      }
+      if (servletName.equals(HTML_SERVICE_SERVLET_NAME)) {
         return "/HTML";
-      } else if(servletName.equals(PLIST_SERVICE_SERVLET_NAME)) {
+      }
+      else if (servletName.equals(PLIST_SERVICE_SERVLET_NAME)) {
         return "/PLIST";
-      } else {
-        throw e;
+      }
+      else {
+        throw new IllegalStateException(format("Unknown servletName '%s'", servletName), e);
       }
     }
   }
 
   /**
    * Returns the base URL of the service having the specified <code>servletName</code>.
+   * 
    * @param request
    * @param servletName
    * @return base URL of the service
@@ -374,13 +354,14 @@ public class Utils
     String serviceUrlPattern = getServletMappingUrlPattern(request, servletName); //e.g. "/PLIST"
 
     String result;
-    if(!isEmpty(contextPath)) {
+    if (!isEmpty(contextPath)) {
       int idx = requestUrl.indexOf(contextPath);
       if (idx < 0) throw new IllegalStateException(format("Cannot find '%s' in '%s'", contextPath, requestUrl));
       result = requestUrl.substring(0, idx + contextPath.length()); //e.g. "http://host:8765/ota-service"
-    } else { //root context
+    }
+    else { //root context
       int idx = requestUrl.indexOf("//");
-      idx = requestUrl.indexOf("/", idx+"//".length());
+      idx = requestUrl.indexOf("/", idx + "//".length());
       result = requestUrl.substring(0, idx); //e.g. "http://host:8765"
     }
     result += serviceUrlPattern; //e.g. "http://host:8765/ota-service/PLIST"
