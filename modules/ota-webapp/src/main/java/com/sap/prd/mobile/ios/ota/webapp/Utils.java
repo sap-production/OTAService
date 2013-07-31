@@ -21,6 +21,8 @@ package com.sap.prd.mobile.ios.ota.webapp;
 
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.decode;
+import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlService.HTML_SERVICE_SERVLET_NAME;
+import static com.sap.prd.mobile.ios.ota.webapp.OtaPlistService.PLIST_SERVICE_SERVLET_NAME;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -314,10 +316,10 @@ public class Utils
     }
   }
 
-  public static String getRequestParams(HttpServletRequest request)
+  public static String getRequestInfosForLog(HttpServletRequest request)
   {
     StringBuilder sb = new StringBuilder();
-    sb.append("REQUEST URI: ").append(request.getRequestURI());
+    sb.append("REQUEST URL: ").append(request.getRequestURL());
     sb.append(", REQUEST PARAMETERS:{");
     Map<String, String[]> params = request.getParameterMap();
     boolean first = true;
@@ -331,14 +333,40 @@ public class Utils
     return sb.toString();
   }
 
+  /**
+   * Gets the <code>url-pattern</code> configured in the <code>servlet-mapping</code> for the specified <code>servletName</code>.<br/>
+   * The trailing "/*" is removed.
+   * @param request
+   * @param servletName
+   * @return url-pattern without "/*"
+   */
   public static String getServletMappingUrlPattern(HttpServletRequest request, String servletName)
   {
-    ServletRegistration servletRegistration = request.getServletContext().getServletRegistration(servletName);
-    String firstMapping = servletRegistration.getMappings().iterator().next();
-    if (firstMapping.endsWith("/*")) firstMapping = firstMapping.substring(0, firstMapping.length() - "/*".length());
-    return firstMapping;
+    try {
+      ServletRegistration servletRegistration = request.getServletContext().getServletRegistration(servletName);
+      String firstMapping = servletRegistration.getMappings().iterator().next();
+      if (firstMapping.endsWith("/*")) firstMapping = firstMapping.substring(0, firstMapping.length() - "/*".length());
+      return firstMapping;
+      
+    } catch (NoSuchMethodError e) {
+      //Workaround - Servlet 3.0 API required - not contained before Tomcat 7
+      if(servletName.equals(HTML_SERVICE_SERVLET_NAME)) {
+        return "/HTML";
+      } else if(servletName.equals(PLIST_SERVICE_SERVLET_NAME)) {
+        return "/PLIST";
+      } else {
+        throw e;
+      }
+    }
   }
 
+  /**
+   * Returns the base URL of the service having the specified <code>servletName</code>.
+   * @param request
+   * @param servletName
+   * @return base URL of the service
+   * @throws MalformedURLException
+   */
   public static URL getServiceBaseUrl(HttpServletRequest request, String servletName) throws MalformedURLException
   {
     String requestUrl = request.getRequestURL().toString(); //e.g. "http://host:8765/ota-service/HTML/UmVmZXJlcj1odHRw..."
@@ -350,7 +378,7 @@ public class Utils
       int idx = requestUrl.indexOf(contextPath);
       if (idx < 0) throw new IllegalStateException(format("Cannot find '%s' in '%s'", contextPath, requestUrl));
       result = requestUrl.substring(0, idx + contextPath.length()); //e.g. "http://host:8765/ota-service"
-    } else {
+    } else { //root context
       int idx = requestUrl.indexOf("//");
       idx = requestUrl.indexOf("/", idx+"//".length());
       result = requestUrl.substring(0, idx); //e.g. "http://host:8765"

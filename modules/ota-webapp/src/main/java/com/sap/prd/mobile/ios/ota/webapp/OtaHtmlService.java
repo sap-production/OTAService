@@ -30,9 +30,10 @@ import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_ON_COLOR;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_ON_COLOR_DEFAULT;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getMatrixToImageConfig;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getParametersAndReferer;
-import static com.sap.prd.mobile.ios.ota.webapp.Utils.getRequestParams;
+import static com.sap.prd.mobile.ios.ota.webapp.Utils.getRequestInfosForLog;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
 import static java.lang.String.format;
+import static java.util.logging.Level.SEVERE;
 import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
 
 import java.awt.Dimension;
@@ -43,7 +44,6 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -63,6 +63,9 @@ public class OtaHtmlService extends HttpServlet
 {
 
   private final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
+
+  public static final String HTML_SERVICE_SERVLET_NAME = "otaHtmlService";
+  
   public final static String HTML_TEMPLATE_PATH_KEY = "htmlTemplatePath";
 
   @Override
@@ -119,8 +122,8 @@ public class OtaHtmlService extends HttpServlet
 
     }
     catch (Exception e) {
-      LOG.log(Level.SEVERE, format("Exception while processing GET request from '%s' (%s)",
-            request.getRemoteAddr(), getRequestParams(request)), e);
+      LOG.log(SEVERE, format("Exception while processing GET request from '%s' (%s)",
+            request.getRemoteAddr(), getRequestInfosForLog(request)), e);
     }
   }
 
@@ -142,7 +145,7 @@ public class OtaHtmlService extends HttpServlet
 
   public static URL getHtmlServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
   {
-    return Utils.getServiceBaseUrl(request, "otaHtmlService");
+    return Utils.getServiceBaseUrl(request, HTML_SERVICE_SERVLET_NAME);
   }
 
   private URL generateHtmlServiceQRCodeUrl(HttpServletRequest request, Map<String, String> params)

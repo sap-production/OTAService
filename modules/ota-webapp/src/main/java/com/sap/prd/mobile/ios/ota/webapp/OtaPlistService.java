@@ -33,6 +33,8 @@ import static com.sap.prd.mobile.ios.ota.webapp.Utils.extractSlashedEncodedParam
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getMatrixToImageConfig;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.getParametersAndReferer;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
+import static java.lang.String.format;
+import static java.util.logging.Level.SEVERE;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -40,7 +42,6 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -59,6 +60,8 @@ public class OtaPlistService extends HttpServlet
 
   private final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
 
+  public static final String PLIST_SERVICE_SERVLET_NAME = "otaPlistService";
+
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
   {
@@ -66,7 +69,8 @@ public class OtaPlistService extends HttpServlet
     try {
       Map<String, String> params = getParametersAndReferer(request, response, false);
 
-      Map<String, String> slashedParams = extractSlashedEncodedParametersFromUri(request, getPlistServletMappingUrlPattern(request));
+      Map<String, String> slashedParams = extractSlashedEncodedParametersFromUri(request,
+            getPlistServletMappingUrlPattern(request));
       dubParameters(KEY_REFERER, params, slashedParams, false);
       dubParameters(KEY_TITLE, params, slashedParams, true);
       dubParameters(KEY_BUNDLE_IDENTIFIER, params, slashedParams, true);
@@ -117,22 +121,19 @@ public class OtaPlistService extends HttpServlet
 
     }
     catch (Exception e) {
-      LOG.log(
-            Level.SEVERE,
-            String.format(
-                  "Exception while processing GET request from '%s' (%s)", request.getRemoteAddr(),
-                  Utils.getRequestParams(request)), e);
+      LOG.log(SEVERE, format("Exception while processing GET request from '%s' (%s)",
+            request.getRemoteAddr(), Utils.getRequestInfosForLog(request)), e);
     }
   }
 
   public static URL getPlistServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
   {
-    return Utils.getServiceBaseUrl(request, "otaPlistService");
+    return Utils.getServiceBaseUrl(request, PLIST_SERVICE_SERVLET_NAME);
   }
 
   public static String getPlistServletMappingUrlPattern(HttpServletRequest request)
   {
-    return Utils.getServletMappingUrlPattern(request, "otaPlistService");
+    return Utils.getServletMappingUrlPattern(request, PLIST_SERVICE_SERVLET_NAME);
   }
 
   /**
