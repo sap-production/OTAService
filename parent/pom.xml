@@ -9,6 +9,13 @@
     <packaging>pom</packaging>
     <name>OTA Parent POM</name>
     <description>The parent POM of all OTA service submodules</description>
+    
+    <parent>
+        <groupId>com.sap.prd.mobile.ios.mios</groupId>
+        <artifactId>quality-check-parent</artifactId>
+        <version>1.0.0</version>
+        <relativePath />
+    </parent>
 
     <url>https://github.com/sap-production/OTAService</url>
     <inceptionYear>2012</inceptionYear>
