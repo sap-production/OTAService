@@ -21,6 +21,7 @@ That's why we implemented the OTA Service.
 
 * The ios-service.war can simply be deployed to the Tomcat/webapps folder
 * If `<Host [...] copyXML="true">` is configured in the server.xml the default context config of the Application is copied to <br>`<Tomcat>/conf/Catalina/localhost/ota-service.xml`
+* **Since iOS 7.1 OTA service has to be used with https!** The the server hosting OTA Service has to have https enabled **and** has to have a certificate accepted by iOS. If you use a self signed certificate the appropriate (CA) certificate has to be installed on the device.
 
 **Parameters in `ota-service.xml`:**
 * `htmlTemplatePath`: The absolute path to your custom HTML template (the template must not be named "template.html"!)
@@ -42,9 +43,9 @@ You can use the following built-in properties in your custom HTML (Velocity) tem
 
 ### Build HTML Template
 To use an OTA Service for deployment of your Apps you have to provide the `.ipa` file via http(s) and place an `.html` file next to the IPA file with the same name (only different extension).<br>
-E.g. `http://server:1080/Store/MyApp.ipa` and `http://server:1080/Store/MyApp.html`.
+E.g. `http://server1:1080/Store/MyApp.ipa` and `http://server1:1080/Store/MyApp.html`.
 The default `buildTemplate.html` file in `modules/ota-library/src/main/resources` shows how a template could look like:
-* Important is the iFrame refering to the OTA Service (example src: http://server:8080/ota-service/HTML?title=MyApp&bundleIdentifier=org.company.mybundleidentifier&bundleVersion=1.0.0)
+* Important is the iFrame refering to the OTA Service (example src: https://server2:8443/ota-service/HTML?title=MyApp&bundleIdentifier=org.company.mybundleidentifier&bundleVersion=1.0.0)
   * `title`: The title of the App
   * `bundleIdentifier`: The BundleIdentifier of the App.
   * `bundleVersion`: The BundleVersion of the App.
