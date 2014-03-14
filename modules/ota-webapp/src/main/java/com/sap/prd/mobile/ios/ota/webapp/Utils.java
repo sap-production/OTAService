@@ -24,14 +24,11 @@ import static com.sap.prd.mobile.ios.ota.lib.LibUtils.decode;
 import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlService.HTML_SERVICE_SERVLET_NAME;
 import static com.sap.prd.mobile.ios.ota.webapp.OtaPlistService.PLIST_SERVICE_SERVLET_NAME;
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.awt.Dimension;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -337,35 +334,6 @@ public class Utils
         throw new IllegalStateException(format("Unknown servletName '%s'", servletName), e);
       }
     }
-  }
-
-  /**
-   * Returns the base URL of the service having the specified <code>servletName</code>.
-   * 
-   * @param request
-   * @param servletName
-   * @return base URL of the service
-   * @throws MalformedURLException
-   */
-  public static URL getServiceBaseUrl(HttpServletRequest request, String servletName) throws MalformedURLException
-  {
-    String requestUrl = request.getRequestURL().toString(); //e.g. "http://host:8765/ota-service/HTML/UmVmZXJlcj1odHRw..."
-    String contextPath = request.getContextPath().toString(); //e.g. "/ota-service" or "" if root context
-    String serviceUrlPattern = getServletMappingUrlPattern(request, servletName); //e.g. "/PLIST"
-
-    String result;
-    if (!isEmpty(contextPath)) {
-      int idx = requestUrl.indexOf(contextPath);
-      if (idx < 0) throw new IllegalStateException(format("Cannot find '%s' in '%s'", contextPath, requestUrl));
-      result = requestUrl.substring(0, idx + contextPath.length()); //e.g. "http://host:8765/ota-service"
-    }
-    else { //root context
-      int idx = requestUrl.indexOf("//");
-      idx = requestUrl.indexOf("/", idx + "//".length());
-      result = requestUrl.substring(0, idx); //e.g. "http://host:8765"
-    }
-    result += serviceUrlPattern; //e.g. "http://host:8765/ota-service/PLIST"
-    return new URL(result);
   }
 
 }

@@ -21,6 +21,7 @@ package com.sap.prd.mobile.ios.ota.webapp;
 
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_IDENTIFIER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_BUNDLE_VERSION;
+import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_DEBUG;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_IPA_CLASSIFIER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_OTA_CLASSIFIER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
@@ -28,8 +29,10 @@ import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.buildMap;
 import static com.sap.prd.mobile.ios.ota.lib.TestUtils.assertContains;
 import static com.sap.prd.mobile.ios.ota.lib.TestUtils.assertOtaLink;
+import static com.sap.prd.mobile.ios.ota.webapp.BaseServlet.APPLICATION_BASE_URL_KEY;
 import static com.sap.prd.mobile.ios.ota.webapp.OtaHtmlService.HTML_TEMPLATE_PATH_KEY;
 import static com.sap.prd.mobile.ios.ota.webapp.TestUtils.mockServletContextUrlMappings;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -73,8 +76,14 @@ public class OtaHtmlServiceTest
   static final String TEST_IPACLASSIFIER = "ipaClassifier";
   final static String TEST_REFERER_WITH_CLASSIFIER = "http://nexus:8081/abc/MyHHH-" + KEY_OTA_CLASSIFIER + ".htm";
   final static String TEST_IPA_LINK_WITH_CLASSIFIER = "http://nexus:8081/abc/MyHHH-" + KEY_IPA_CLASSIFIER + ".ipa";
+  final static String DIFFERING_APPLICATION_BASE_URL = "https://other-ota-server:1234";
 
+  private final static String[] DEFAULT_INIT_PARAMS = {
+    HTML_TEMPLATE_PATH_KEY, "" , KEY_DEBUG, "true"
+    };
+  
   private static URL TEST_PLIST_URL;
+  private static URL DIFFERING_PLIST_URL;
   private static String TEST_OTA_LINK;
   private static URL TEST_PLIST_URL_WITH_CLASSIFIERS;
 
@@ -87,6 +96,9 @@ public class OtaHtmlServiceTest
   public static void beforeClass() throws IOException
   {
     TEST_PLIST_URL = OtaPlistGenerator.generatePlistRequestUrl(new URL("http://ota-server:8080/PLIST"),
+          buildMap(KEY_REFERER, TEST_REFERER, KEY_TITLE, TEST_TITLE, KEY_BUNDLE_IDENTIFIER, TEST_BUNDLEIDENTIFIER,
+                KEY_BUNDLE_VERSION, TEST_BUNDLEVERSION));
+    DIFFERING_PLIST_URL = OtaPlistGenerator.generatePlistRequestUrl(new URL(DIFFERING_APPLICATION_BASE_URL+"/PLIST"),
           buildMap(KEY_REFERER, TEST_REFERER, KEY_TITLE, TEST_TITLE, KEY_BUNDLE_IDENTIFIER, TEST_BUNDLEIDENTIFIER,
                 KEY_BUNDLE_VERSION, TEST_BUNDLEVERSION));
     TEST_OTA_LINK = String.format("<a href='itms-services:///?action=download-manifest&url=%s'>", TEST_PLIST_URL);
@@ -109,6 +121,7 @@ public class OtaHtmlServiceTest
   public void testCorrectValues() throws ServletException, IOException
   {
     OtaHtmlService service = new OtaHtmlService();
+    service = mockServletContextInitParameters(service);
     StringWriter writer = new StringWriter();
 
     HttpServletRequest request = mockRequest();
@@ -126,12 +139,12 @@ public class OtaHtmlServiceTest
   public void testWithConfiguration() throws ServletException, IOException
   {
     OtaHtmlService service = new OtaHtmlService();
+    service = mockServletContextInitParameters(service, HTML_TEMPLATE_PATH_KEY, TEST_ALTERNATIVE_TEMPLATE);
     StringWriter writer = new StringWriter();
 
     HttpServletRequest request = mockRequest();
     HttpServletResponse response = mockResponse(writer);
-    service = mockServletContextInitParameters(service,
-          HTML_TEMPLATE_PATH_KEY, TEST_ALTERNATIVE_TEMPLATE);
+
     service.doPost(request, response);
 
     String result = writer.getBuffer().toString();
@@ -139,29 +152,6 @@ public class OtaHtmlServiceTest
     assertContains(CHECK_TITLE, result);
     assertContains("<a href='itms-services:///?action=download-manifest&url=" + TEST_PLIST_URL + "'>OTA</a>", result);
     assertContains("<a href='" + TEST_IPA_LINK + "'>IPA</a>", result);
-  }
-
-  private OtaHtmlService mockServletContextInitParameters(OtaHtmlService service, String... keyValuePairs)
-  {
-    if (keyValuePairs.length % 2 != 0) {
-      throw new IllegalArgumentException("keyValuePairs has uneven length: " + keyValuePairs.length);
-    }
-    OtaHtmlService serviceSpy = Mockito.spy(service);
-
-    ServletConfig configMock = mock(ServletConfig.class);
-    when(serviceSpy.getServletConfig()).thenReturn(configMock);
-
-    List<String> keys = new ArrayList<String>();
-    ServletContext contextMock = mock(ServletContext.class);
-    for (int i = 0; i < keyValuePairs.length; i += 2) {
-      String key = keyValuePairs[i];
-      keys.add(key);
-      String value = keyValuePairs[i + 1];
-      when(contextMock.getInitParameter(key)).thenReturn(value);
-    }
-    when(contextMock.getInitParameterNames()).thenReturn(Collections.enumeration(keys));
-    when(serviceSpy.getServletContext()).thenReturn(contextMock);
-    return serviceSpy;
   }
 
   private HttpServletResponse mockResponse(StringWriter writer) throws IOException
@@ -193,6 +183,7 @@ public class OtaHtmlServiceTest
   public void testWithClassifiers() throws ServletException, IOException
   {
     OtaHtmlService service = new OtaHtmlService();
+    service = mockServletContextInitParameters(service);
     StringWriter writer = new StringWriter();
 
     HttpServletRequest request = mock(HttpServletRequest.class);
@@ -221,4 +212,50 @@ public class OtaHtmlServiceTest
     assertContains(TEST_PLIST_URL_WITH_CLASSIFIERS.toExternalForm(), result);
   }
 
+  @Test
+  public void testConfiguredApplicationBaseUrl() throws ServletException, IOException
+  {
+    OtaHtmlService service = new OtaHtmlService();
+    service = mockServletContextInitParameters(service, APPLICATION_BASE_URL_KEY, DIFFERING_APPLICATION_BASE_URL);
+    StringWriter writer = new StringWriter();
+
+    HttpServletRequest request = mockRequest();
+    HttpServletResponse response = mockResponse(writer);
+    service.doPost(request, response);
+
+    String result = writer.getBuffer().toString();
+    assertContains(CHECK_TITLE, result);
+    assertContains(TEST_IPA_LINK, result);
+    assertOtaLink(result, DIFFERING_PLIST_URL.toString(), TEST_BUNDLEIDENTIFIER);
+    assertContains(DIFFERING_PLIST_URL.toExternalForm(), result);
+    assertContains(DIFFERING_APPLICATION_BASE_URL, result);
+  }
+  
+  private OtaHtmlService mockServletContextInitParameters(OtaHtmlService service, String... addOrOverrideKeyValuePairs)
+  {
+    if (addOrOverrideKeyValuePairs.length % 2 != 0) {
+      throw new IllegalArgumentException("keyValuePairs has uneven length: " + addOrOverrideKeyValuePairs.length);
+    }
+    final List<String> keyValuePairs = new ArrayList<String>();
+    keyValuePairs.addAll(asList(DEFAULT_INIT_PARAMS));
+    keyValuePairs.addAll(asList(addOrOverrideKeyValuePairs));
+    
+    OtaHtmlService serviceSpy = Mockito.spy(service);
+
+    ServletConfig configMock = mock(ServletConfig.class);
+    when(serviceSpy.getServletConfig()).thenReturn(configMock);
+
+    List<String> keys = new ArrayList<String>();
+    ServletContext contextMock = mock(ServletContext.class);
+    for (int i = 0; i < keyValuePairs.size(); i += 2) {
+      String key = keyValuePairs.get(i);
+      keys.add(key);
+      String value = keyValuePairs.get(i + 1);
+      when(contextMock.getInitParameter(key)).thenReturn(value);
+    }
+    when(contextMock.getInitParameterNames()).thenReturn(Collections.enumeration(keys));
+    when(serviceSpy.getServletContext()).thenReturn(contextMock);
+    return serviceSpy;
+  }
+  
 }

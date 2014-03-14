@@ -24,12 +24,16 @@ That's why we implemented the OTA Service.
 * **Since iOS 7.1 OTA service has to be used with https!** The the server hosting OTA Service has to have https enabled **and** has to have a certificate accepted by iOS. If you use a self signed certificate the appropriate (CA) certificate has to be installed on the device.
 
 **Parameters in `ota-service.xml`:**
-* `htmlTemplatePath`: The absolute path to your custom HTML template (the template must not be named "template.html"!)
+* `htmlTemplatePath`: The absolute path to your custom HTML template (the template **must not be named "template.html"!**)
+* `applicationBaseUrl`: The base URL of the ota-service application. If specified always this base URL is used instead of deriving it from the request. This is useful to enforce enforce https, even if the ota-service is called with http. Example "https://myhost:8443/ota-service".
 * `debug`: if "true" the template is reloaded for each request (helpful for testing).
 * Any additional custom parameters can be used inside the template.
 
 **HTML Template**
 The default `template.html` included in the OTA Service is located in `modules/ota-library/src/main/resources`.
+Jquery has to be downloaded to the OTA server in order to comply with the same-origin policy (http://en.wikipedia.org/wiki/Same-origin_policy).
+Download from e.g. http://code.jquery.com/jquery-latest.pack.js and save it in <webapps>/ota.libraries/jquery-latest.pack.js.
+
 You can use the following built-in properties in your custom HTML (Velocity) template:
 * `$title`: The title of the App.
 * `$bundleIdentifier`: The BundleIdentifier of the App.

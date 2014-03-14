@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -55,7 +54,7 @@ import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator;
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.Parameters;
 
 @SuppressWarnings("serial")
-public class OtaPlistService extends HttpServlet
+public class OtaPlistService extends BaseServlet
 {
 
   private static final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
@@ -120,9 +119,9 @@ public class OtaPlistService extends HttpServlet
     }
   }
 
-  public static URL getPlistServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
+  private URL getPlistServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
   {
-    return Utils.getServiceBaseUrl(request, PLIST_SERVICE_SERVLET_NAME);
+    return getServiceBaseUrl(request, PLIST_SERVICE_SERVLET_NAME);
   }
 
   public static String getPlistServletMappingUrlPattern(HttpServletRequest request)

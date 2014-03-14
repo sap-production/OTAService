@@ -24,7 +24,7 @@ import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_QRCODE;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REMOVE_OUTER_FRAME;
 import static com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.generateHtmlServiceUrl;
-import static com.sap.prd.mobile.ios.ota.webapp.OtaPlistService.getPlistServiceBaseUrl;
+import static com.sap.prd.mobile.ios.ota.webapp.OtaPlistService.PLIST_SERVICE_SERVLET_NAME;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_OFF_COLOR;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_OFF_COLOR_DEFAULT;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.QR_ON_COLOR;
@@ -42,13 +42,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -60,7 +57,7 @@ import com.sap.prd.mobile.ios.ota.lib.OtaHtmlGenerator.Parameters;
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator;
 
 @SuppressWarnings("serial")
-public class OtaHtmlService extends HttpServlet
+public class OtaHtmlService extends BaseServlet
 {
 
   private static final Logger LOG = Logger.getLogger(OtaPlistService.class.getSimpleName());
@@ -104,15 +101,14 @@ public class OtaHtmlService extends HttpServlet
         URL plistUrl = OtaPlistGenerator.generatePlistRequestUrl(getPlistServiceBaseUrl(request), params);
         URL htmlServiceQrcodeUrl = generateHtmlServiceQRCodeUrl(request, params);
 
-        HashMap<String, String> initParameters = getInitParameters();
-        String htmlTemplatePath = initParameters.get(HTML_TEMPLATE_PATH_KEY);
-        final boolean DEBUG = equalsIgnoreCase(initParameters.get(Constants.KEY_DEBUG), "true");
+        String htmlTemplatePath = getInitParameter(HTML_TEMPLATE_PATH_KEY);
+        final boolean DEBUG = equalsIgnoreCase(getInitParameter(Constants.KEY_DEBUG), "true");
 
         response.setContentType("text/html");
         PrintWriter writer = response.getWriter();
         OtaHtmlGenerator generator = OtaHtmlGenerator.getInstance(htmlTemplatePath, DEBUG);
         LOG.finer("Using HTML Template: " + generator.getTemplateName() + " (configured: " + htmlTemplatePath + ")");
-        generator.generate(writer, new Parameters(plistUrl, htmlServiceQrcodeUrl, params, initParameters));
+        generator.generate(writer, new Parameters(plistUrl, htmlServiceQrcodeUrl, params, getInitParameters()));
         writer.flush();
       }
 
@@ -123,25 +119,15 @@ public class OtaHtmlService extends HttpServlet
     }
   }
 
-  private HashMap<String, String> getInitParameters()
+  private URL getHtmlServiceBaseUrl(HttpServletRequest request) 
+        throws MalformedURLException
   {
-    HashMap<String, String> map = new HashMap<String, String>();
-    try {
-      Enumeration<String> initParameterNames = this.getServletContext().getInitParameterNames();
-      while (initParameterNames.hasMoreElements()) {
-        String name = initParameterNames.nextElement();
-        map.put(name, this.getServletContext().getInitParameter(name));
-      }
-    }
-    catch (IllegalStateException e) {
-      if (!e.getMessage().equals("ServletConfig has not been initialized")) throw e;
-    }
-    return map;
+    return getServiceBaseUrl(request, HTML_SERVICE_SERVLET_NAME);
   }
-
-  public static URL getHtmlServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
+  
+  private URL getPlistServiceBaseUrl(HttpServletRequest request) throws MalformedURLException
   {
-    return Utils.getServiceBaseUrl(request, HTML_SERVICE_SERVLET_NAME);
+    return getServiceBaseUrl(request, PLIST_SERVICE_SERVLET_NAME);
   }
 
   private URL generateHtmlServiceQRCodeUrl(HttpServletRequest request, Map<String, String> params)
