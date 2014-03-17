@@ -6,7 +6,7 @@
   
   <groupId>com.sap.prd.mobile.ios.ota</groupId>
   <artifactId>component</artifactId>
-  <version>1.0.6-SNAPSHOT</version>
+  <version>1.0.6</version>
   <packaging>pom</packaging>
   <name>Main Component</name>
 
