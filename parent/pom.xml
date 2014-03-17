@@ -5,7 +5,7 @@
 
     <groupId>com.sap.prd.mobile.ios.ota</groupId>
     <artifactId>parent</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>OTA Parent POM</name>
     <description>The parent POM of all OTA service submodules</description>
