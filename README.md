@@ -32,7 +32,7 @@ That's why we implemented the OTA Service.
 **HTML Template**
 The default `template.html` included in the OTA Service is located in `modules/ota-library/src/main/resources`.
 Jquery has to be downloaded to the OTA server in order to comply with the same-origin policy (http://en.wikipedia.org/wiki/Same-origin_policy).
-Download from e.g. http://code.jquery.com/jquery-latest.pack.js and save it in <webapps>/ota.libraries/jquery-latest.pack.js.
+Download from e.g. http://code.jquery.com/jquery-latest.pack.js and save it in <webapps>/ota-libraries/jquery-latest.pack.js.
 
 You can use the following built-in properties in your custom HTML (Velocity) template:
 * `$title`: The title of the App.
