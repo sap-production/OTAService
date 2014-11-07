@@ -35,6 +35,7 @@ import static com.sap.prd.mobile.ios.ota.webapp.Utils.getParametersAndReferer;
 import static com.sap.prd.mobile.ios.ota.webapp.Utils.sendQRCode;
 import static java.lang.String.format;
 import static java.util.logging.Level.SEVERE;
+import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -50,6 +51,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.sap.prd.mobile.ios.ota.lib.Constants;
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator;
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.Parameters;
 
@@ -61,6 +63,9 @@ public class OtaPlistService extends BaseServlet
 
   public static final String PLIST_SERVICE_SERVLET_NAME = "otaPlistService";
 
+  public static final String PLIST_TEMPLATE_PATH_KEY = "plistTemplatePath";
+
+  
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
   {
@@ -105,10 +110,12 @@ public class OtaPlistService extends BaseServlet
 
       }
       else {
-
+        String plistTemplatePath = getInitParameter(PLIST_TEMPLATE_PATH_KEY);
+        final boolean DEBUG = equalsIgnoreCase(getInitParameter(Constants.KEY_DEBUG), "true");
+        
         response.setContentType("application/xml");
         PrintWriter writer = response.getWriter();
-        OtaPlistGenerator.getInstance().generate(writer, new Parameters(params));
+        OtaPlistGenerator.getInstance(plistTemplatePath, DEBUG).generate(writer, new Parameters(params));
         writer.flush();
       }
 

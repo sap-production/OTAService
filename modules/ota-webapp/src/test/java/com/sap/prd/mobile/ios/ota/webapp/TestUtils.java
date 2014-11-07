@@ -19,16 +19,26 @@
  */
 package com.sap.prd.mobile.ios.ota.webapp;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRegistration;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.mockito.Mockito;
 
 public class TestUtils
 {
@@ -58,5 +68,39 @@ public class TestUtils
     when(mockedServletContext.getServletRegistration("otaHtmlService")).thenReturn(mockedHtmlServletRegistration);
     when(request.getServletContext()).thenReturn(mockedServletContext);
   }
-  
+
+  public static BaseServlet mockServletContextInitParameters(BaseServlet service, String[] DEFAULT_INIT_PARAMS, String... addOrOverrideKeyValuePairs)
+  {
+    if (addOrOverrideKeyValuePairs.length % 2 != 0) {
+      throw new IllegalArgumentException("keyValuePairs has uneven length: " + addOrOverrideKeyValuePairs.length);
+    }
+    final List<String> keyValuePairs = new ArrayList<String>();
+    keyValuePairs.addAll(asList(DEFAULT_INIT_PARAMS));
+    keyValuePairs.addAll(asList(addOrOverrideKeyValuePairs));
+    
+    BaseServlet serviceSpy = Mockito.spy(service);
+
+    ServletConfig configMock = mock(ServletConfig.class);
+    when(serviceSpy.getServletConfig()).thenReturn(configMock);
+
+    List<String> keys = new ArrayList<String>();
+    ServletContext contextMock = mock(ServletContext.class);
+    for (int i = 0; i < keyValuePairs.size(); i += 2) {
+      String key = keyValuePairs.get(i);
+      keys.add(key);
+      String value = keyValuePairs.get(i + 1);
+      when(contextMock.getInitParameter(key)).thenReturn(value);
+    }
+    when(contextMock.getInitParameterNames()).thenReturn(Collections.enumeration(keys));
+    when(serviceSpy.getServletContext()).thenReturn(contextMock);
+    return serviceSpy;
+  }
+
+  public static HttpServletResponse mockResponse(StringWriter writer) throws IOException
+  {
+    HttpServletResponse response = mock(HttpServletResponse.class);
+    when(response.getWriter()).thenReturn(new PrintWriter(writer));
+    return response;
+  }
+
 }

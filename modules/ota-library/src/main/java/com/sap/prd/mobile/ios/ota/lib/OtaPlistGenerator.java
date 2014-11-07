@@ -27,12 +27,15 @@ import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_OTA_CLASSIFIER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_REFERER;
 import static com.sap.prd.mobile.ios.ota.lib.Constants.KEY_TITLE;
 import static com.sap.prd.mobile.ios.ota.lib.LibUtils.encode;
+import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.sap.prd.mobile.ios.ota.lib.OtaPlistGenerator.Parameters;
@@ -78,19 +81,47 @@ public class OtaPlistGenerator extends VelocityBase<Parameters>
   }
 
   private static final String DEFAULT_TEMPLATE = "template.plist";
-  private static OtaPlistGenerator instance = null;
+  private static Map<String, OtaPlistGenerator> instances = new HashMap<String, OtaPlistGenerator>();
 
   public static synchronized OtaPlistGenerator getInstance()
   {
-    if (instance == null) {
-      instance = new OtaPlistGenerator();
-    }
-    return instance;
+    return getInstance(null);
   }
 
-  private OtaPlistGenerator()
+  public static synchronized OtaPlistGenerator getInstance(String template)
   {
-    super(DEFAULT_TEMPLATE);
+    return getInstance(template, false);
+  }
+  
+  public static synchronized OtaPlistGenerator getInstance(String template, boolean forceNewInstance)
+  {
+    if (isEmpty(template)) {
+      template = DEFAULT_TEMPLATE;
+    }
+    else {
+      File file = new File(template);
+      if (file.isFile() && file.getName().equals(DEFAULT_TEMPLATE))
+        throw new IllegalArgumentException(format(
+              "Custom template (configured in e.g. 'Tomcat/conf/Catalina/localhost/ota-service.xml') " +
+                    "must not be named '%s'. Current path: '%s'", DEFAULT_TEMPLATE, template));
+    }
+
+    OtaPlistGenerator instance;
+
+    if (forceNewInstance || !instances.keySet().contains(template)) {
+      instance = new OtaPlistGenerator(template);
+      instances.put(template, instance);
+    }
+    else {
+      instance = instances.get(template);
+    }
+
+    return instance;
+  }
+  
+  private OtaPlistGenerator(String template)
+  {
+    super(template);
   }
 
   @Override
