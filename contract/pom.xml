@@ -7,7 +7,7 @@
   <parent>
     <groupId>com.sap.prd.mobile.ios.ota</groupId>
     <artifactId>component</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.7</version>
     <relativePath>..</relativePath>
   </parent>
     
@@ -21,7 +21,7 @@
       <dependency>
           <groupId>com.sap.prd.mobile.ios.ota</groupId>
           <artifactId>com.sap.prd.mobile.ios.ota.library</artifactId>
-          <version>1.0.7-SNAPSHOT</version>
+          <version>1.0.7</version>
       </dependency>
 
   </dependencies>
